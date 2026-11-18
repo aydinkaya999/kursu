@@ -1,6 +1,6 @@
 # Kürsü
 
-The M0 scaffold connects an Expo Router app for web, iOS and Android to FastAPI and PostgreSQL 16. The start screen displays **Sunucuya bağlanıldı.** after the API successfully queries PostgreSQL.
+Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. The Today route displays **Sunucuya bağlanıldı.** after the API successfully queries PostgreSQL.
 
 ## Run locally
 
@@ -32,6 +32,12 @@ Press **w** for web, **i** for the iOS Simulator on macOS, or **a** for an Andro
 
 `pnpm dev:api` listens on all interfaces for device testing. PostgreSQL is published on loopback. If port 5432 is occupied, set both `POSTGRES_PORT` and the port in `DATABASE_URL` before setup. When serving the web app from another origin, set `APP_ORIGIN` to its full origin and restart the API. Expo reads public variables at bundle time.
 
+## App shell and component gallery
+
+The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Until their feature milestones, the routes display their titles and Today retains the live health check.
+
+In development, select **Bileşen galerisi** on Today on any platform, or open `http://localhost:8081/gallery` on web. Try the selection controls, question map and navigation previews there. The pinned **Bugüne dön** button returns to Today. The sample state lasts for the current gallery visit. The app bundles the five Plus Jakarta Sans weights locally and renders the reference icons with SVG. Production builds protect the gallery route. A static web host should serve `index.html` for application routes so deep links can enter the shell.
+
 ## Commands
 
 | Command | Result |
@@ -44,16 +50,16 @@ Press **w** for web, **i** for the iOS Simulator on macOS, or **a** for an Andro
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Build the web app, run the API on port 8100, serve the export on port 4173 and exercise the health check in Chromium at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, the API on 8100 and the development gallery on 4181. Verify health, deep links, responsive navigation, gallery interactions and reference styles. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
 ## Repository
 
-- `apps/app/app/` contains the Router layout and health screen. Turkish copy and style tokens live in `apps/app/src/`. TanStack Query handles the request state and retry.
+- `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles the health request and retry.
 - `services/api/app/` contains the FastAPI app, settings and async SQLAlchemy session factory. Psycopg connects to PostgreSQL. The live contract is at `/v1/openapi.json` and API documentation is at `/v1/docs`.
 - `services/api/alembic/` contains the baseline. PostgreSQL holds only Alembic's revision table after a fresh setup. Content tables and seed import start in M2.
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. The M0 decisions and verification record are in the [ExecPlan](.agent/plans/M0-scaffold.md).
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. The milestone decisions and verification records are in the [M0 scaffold plan](.agent/plans/M0-scaffold.md) and the [M1 design system plan](.agent/plans/M1-design-system.md).

@@ -4,9 +4,10 @@ import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { tr } from "../src/i18n/tr";
 
 const fetchHealth = jest.spyOn(globalThis, "fetch");
-// The generated client captures fetch when the screen's module first loads.
-const { default: HealthScreen } =
-  jest.requireActual<typeof import("../app/index")>("../app/index");
+// The generated client captures fetch when the panel's module first loads.
+const { default: HealthPanel } = jest.requireActual<
+  typeof import("../src/features/health/HealthPanel")
+>("../src/features/health/HealthPanel");
 
 async function renderHealth() {
   const client = new QueryClient({
@@ -14,7 +15,7 @@ async function renderHealth() {
   });
   await render(
     <QueryClientProvider client={client}>
-      <HealthScreen />
+      <HealthPanel />
     </QueryClientProvider>,
   );
 }

@@ -5,7 +5,7 @@
     "scheme": "kursu",
     "version": "0.1.0",
     "platforms": ["ios", "android", "web"],
-    "plugins": ["expo-router", "expo-status-bar"],
+    "plugins": ["expo-router", "expo-status-bar", "expo-font"],
     "experiments": {
       "typedRoutes": true
     },

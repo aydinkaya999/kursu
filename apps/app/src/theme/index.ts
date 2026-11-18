@@ -1,9 +1,61 @@
-export { colors } from "./colors";
-
-export const spacing = { gap: 12, inset: 20 } as const;
-export const control = { minHeight: 44, pillRadius: 999 } as const;
-export const typography = {
-  title: { fontSize: 22, lineHeight: 28, fontWeight: "800" },
-  body: { fontSize: 14, lineHeight: 21 },
-  action: { fontSize: 15, fontWeight: "700" },
+export * from "./colors";
+export * from "./typography";
+export const space = {
+  x2: 2,
+  x4: 4,
+  x6: 6,
+  x8: 8,
+  x10: 10,
+  x12: 12,
+  x14: 14,
+  x16: 16,
+  x18: 18,
+  x20: 20,
+  x24: 24,
+  x32: 32,
+} as const;
+export const radius = {
+  tiny: 3,
+  small: 10,
+  compact: 12,
+  field: 14,
+  option: 16,
+  task: 18,
+  card: 20,
+  primary: 22,
+  nav: 24,
+  pill: 999,
+} as const;
+export const line = { hair: 1, control: 1.5, selected: 2 } as const;
+export const size = {
+  target: 44,
+  action: 52,
+  primaryAction: 56,
+  compactAction: 46,
+  choice: 48,
+  option: 54,
+  cell: 60,
+  answer: 36,
+  markedAnswer: 40,
+  letter: 32,
+  count: 36,
+  tileSmall: 32,
+  tileMedium: 36,
+  tileLarge: 44,
+  tabIconWidth: 56,
+  tabIconHeight: 30,
+  tabHeight: 52,
+  progress: 8,
+  primaryProgress: 10,
+  segment: 6,
+  rail: 224,
+  column: 560,
+  wide: 1024,
+} as const;
+export const shadow = {
+  card: "0px 8px 24px rgba(21,27,46,0.06)",
+  primary: "0px 10px 24px rgba(41,87,232,0.25)",
+  control: "0px 4px 12px rgba(21,27,46,0.08)",
+  nav: "0px -6px 20px rgba(21,27,46,0.06)",
+  segment: "0px 2px 6px rgba(21,27,46,0.08)",
 } as const;
