@@ -17,7 +17,7 @@ From a fresh checkout, a developer can start PostgreSQL 16, a FastAPI service an
 - [x] Repair the Metro startup failure, TypeScript declarations, health component tests and formatting. Run the locked installs and repeat the checks in a clean checkout.
 - [x] Export all three platforms and exercise the web export's error, retry and success states with controlled HTTP responses.
 - [x] Complete a clean setup against PostgreSQL 16, verify both development servers, and pass the full local check and Chromium smoke test.
-- [ ] Verify the same source on a hosted GitHub Actions runner.
+- [x] Verify the same source on a hosted GitHub Actions runner.
 
 ## Decision log
 
@@ -50,10 +50,10 @@ From a fresh checkout, a developer can start PostgreSQL 16, a FastAPI service an
 | --- | --- |
 | Clean setup and both development servers | Started from a local Git clone with both lockfiles, no `.env` and no installed dependencies. `pnpm setup` created `.env` from the example, installed dependencies, started PostgreSQL 16.15, applied the migration, generated the client and completed browser setup. A separate Compose project used host port 55432 to isolate its data. Playwright started `pnpm dev:api` on port 8000 and `pnpm dev:app --localhost` on port 8081 and ran the health screen smoke test against them at both widths. Both cases passed. |
 | App displays the API response | `pnpm test:e2e` passed both Chromium cases on the production web export. At 390 × 844 and 1280 × 800 the browser observed a live `GET /v1/health`, HTTP 200 and `{"status":"ok"}`, then found the Turkish success message. The document language was `tr`. Screenshots from the separate development-server run showed the heading and status centered and visible at both sizes. Expo also produced an iOS and an Android Hermes bundle. |
-| Local checks and CI | `pnpm check` passed ESLint, Prettier, Ruff, both TypeScript projects, strict mypy, two Jest tests and two pytest tests. The API cases exercised a healthy PostgreSQL service with CORS and an unreachable database returning HTTP 503. Pytest emitted one deprecation warning from Starlette's test client. The hosted Actions run is the remaining acceptance check. |
+| Local checks and CI | `pnpm check` passed ESLint, Prettier, Ruff, both TypeScript projects, strict mypy, two Jest tests and two pytest tests. The API cases exercised a healthy PostgreSQL service with CORS and an unreachable database returning HTTP 503. Pytest emitted one deprecation warning from Starlette's test client. The hosted runner also passed the locked setup, checks, web smoke tests and client regeneration. [GitHub Actions](https://github.com/aydinkaya999/kursu/actions/runs/44386439833) |
 | Reproducible client | Ran `pnpm gen:api` twice again in the clean checkout with its locked Python environment. `git diff --exit-code -- packages/api-client pnpm-lock.yaml services/api/uv.lock` passed and the client directory had no untracked files. |
 | Health-only scope | The application's `/v1/openapi.json` exposes only `GET /v1/health`. The Expo route uses the five diagnostic strings. A live PostgreSQL catalog query showed exactly one table in `public`, `alembic_version`, at revision `0001_baseline`. `uv run --directory services/api alembic check` found no schema drift. |
 
 ## Outcomes
 
-With Docker running, use `pnpm setup` and start `pnpm dev:api` and `pnpm dev:app` in separate terminals. Run `pnpm check` and `pnpm test:e2e` with PostgreSQL up. All local acceptance checks passed. Both development servers stopped after the browser checks, and Compose removed the test container, network and volume. The owner supplied the empty GitHub repository `aydinkaya999/kursu`. The `github.com-orion` SSH alias authenticated as `aydinkaya999`.
+With Docker running, use `pnpm setup` and start `pnpm dev:api` and `pnpm dev:app` in separate terminals. Run `pnpm check` and `pnpm test:e2e` with PostgreSQL up. All local acceptance checks passed. Both development servers stopped after the browser checks, and Compose removed the test container, network and volume. The owner supplied the empty GitHub repository `aydinkaya999/kursu`. The `github.com-orion` SSH alias authenticated as `aydinkaya999`. M0 was published on main. The workflow pins an available setup-uv release after its original major tag failed to resolve.
