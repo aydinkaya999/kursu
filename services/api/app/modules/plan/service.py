@@ -39,7 +39,7 @@ async def carry_forward(
     exam: date,
     mock: int,
     inputs: evidence.Evidence,
-) -> RowMapping | None:
+) -> tuple[RowMapping | None, set[str]]:
     regular_end = exam - rules.DAY * rules.NEAR_EXAM
     deadlines: dict[str, date] = {}
     for topic in inputs.topics:
@@ -72,7 +72,14 @@ async def carry_forward(
         await db.execute(update(tasks).where(tasks.c.id == row["id"]).values(carry_on=when))
         if when is not None and when <= day:
             due.append(row)
-    return next(iter(due), None)
+    # Keep the same carried assignment when settings rebuild the day.
+    selected = next((r for r in history if r["carried_on"] == day), None)
+    if selected is None:
+        selected = next(iter(due), None)
+    deferred = set(by_key)
+    if selected is not None:
+        deferred.discard(selected["task_key"])
+    return selected, deferred
 
 
 def still_available(scheduled: list[RowMapping], inputs: evidence.Evidence) -> bool:
@@ -154,8 +161,12 @@ async def build_plan(
             .mappings()
             .one()
         )
-    kept = [Assignment.model_validate(r["ref"]) for r in scheduled if r["state"] == "done"]
-    carry = await carry_forward(db, history, day, exam, mock, inputs)
+    kept = [
+        Assignment.model_validate(r["ref"])
+        for r in sorted(scheduled, key=lambda r: not r["included"])
+        if r["state"] == "done"
+    ]
+    carry, deferred = await carry_forward(db, history, day, exam, mock, inputs)
     specs = rules.build(
         day=day,
         exam=exam,
@@ -168,6 +179,7 @@ async def build_plan(
         kept=kept,
         closed=plan["completed_at"] is not None,
         carry=(carry["type"], carry["ref"]["content_id"]) if carry else None,
+        deferred=deferred,
     )
     await db.execute(
         update(tasks).where(tasks.c.plan_id == plan["id"]).values(included=False)

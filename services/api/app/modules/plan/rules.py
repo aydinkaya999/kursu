@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from math import floor
@@ -43,6 +43,7 @@ def build(
     mock: tuple[str, str] | None,
     kept: list[Assignment],
     carry: tuple[TaskKind, str] | None = None,
+    deferred: Collection[str] = (),
     closed: bool = False,
 ) -> list[Assignment]:
     budget = minutes * 4
@@ -50,7 +51,7 @@ def build(
         return kept
     if day.weekday() == mock_weekday:
         if kept or closed:
-            return kept
+            return [task for task in kept if task.kind == "mock"][:1]
         return (
             [
                 Assignment(
@@ -61,7 +62,10 @@ def build(
             else []
         )
     result: list[Assignment] = []
+    limits = {"review": 1, "lesson": 2, "topic_test": 1}
     for task in kept:
+        if sum(t.kind == task.kind for t in result) >= limits.get(task.kind, 0):
+            continue
         if task.kind == "review" and task.quarters > budget * 2 // 5:
             continue
         if sum(t.quarters for t in result) + task.quarters <= budget:
@@ -98,10 +102,11 @@ def build(
         for topic in lesson_order:
             if lessons_left <= 0 or left < 20:
                 break
-            if not topic.lessons or topic.id in used:
+            available = [v for v in topic.lessons if "lesson:" + v[0] not in deferred]
+            if not available or topic.id in used:
                 continue
             lesson_id, title = next(
-                (v for v in topic.lessons if carry == ("lesson", v[0])), topic.lessons[0]
+                (v for v in available if carry == ("lesson", v[0])), available[0]
             )
             result.append(
                 Assignment(
@@ -117,7 +122,14 @@ def build(
             left -= 20
     if "topic_test" not in kinds:
         test_order = sorted(ranked, key=lambda t: not (carry == ("topic_test", t.id)))
-        topic_for_test = next((t for t in test_order if t.questions >= 10), None)
+        topic_for_test = next(
+            (
+                t
+                for t in test_order
+                if t.questions >= 10 and "topic_test:" + t.id not in deferred
+            ),
+            None,
+        )
         if topic_for_test:
             n = min(15, left // 6, topic_for_test.questions)
             if n >= 10:

@@ -187,6 +187,9 @@ def test_plan_1_8_10_tasks_dates_and_streak(demo: Settings, engine: Engine) -> N
         now += DAY
         after = today()
         assert after["streak"] == 1 and sum(t["minutes"] for t in after["tasks"]) <= 30
+        missed_work = {(t["kind"], t["content_id"]) for t in tomorrow["tasks"]}
+        todays_work = {(t["kind"], t["content_id"]) for t in after["tasks"]}
+        assert len(missed_work & todays_work) == 1
         assert c.post(f"/v1/plan/tasks/{old}/start", headers=user).status_code == 409
         with engine.connect() as db:
             dates = db.scalars(
@@ -247,6 +250,62 @@ def test_plan_8_downsizing_preserves_earned_work_and_limits_review_share() -> No
     adjusted = schedule(budget=30, kept=[done])
     assert done not in adjusted
     assert sum(t.quarters for t in adjusted) <= 30 * 4 - done.quarters
+
+
+def test_merged_completions_keep_one_mock_and_two_daily_lesson_slots() -> None:
+    sunday = MON + DAY * 6
+    first = schedule(sunday)[0]
+    second = first.model_copy(update={"content_id": "another-mock"})
+    assert schedule(sunday, kept=[first, second], closed=True) == [first]
+    lessons = [
+        Assignment(kind="lesson", topic_id=t, content_id=t, quarters=20)
+        for t in ("a", "b", "c")
+    ]
+    assert schedule(kept=lessons, closed=True) == lessons[:2]
+
+
+def test_plan_9_deferred_tasks_return_on_their_assigned_dates(
+    demo: Settings, engine: Engine
+) -> None:
+    app = create_app(demo)
+    with TestClient(app) as c:
+        auth = signin(c)
+        clock = datetime(2027, 2, 1, 9, tzinfo=ISTANBUL)
+        app.dependency_overrides[server_now] = lambda: clock
+
+        def assignments() -> list[dict[str, Any]]:
+            response = c.get("/v1/plan/today", headers=auth)
+            response.raise_for_status()
+            return list(response.json()["tasks"])
+
+        missed_keys = {(t["kind"], t["content_id"]) for t in assignments()}
+        clock += DAY
+        assignments()
+        with engine.connect() as db:
+            slots = {
+                row.carry_on: (row.type, row.ref["content_id"])
+                for row in db.execute(
+                    select(tasks.c.carry_on, tasks.c.type, tasks.c.ref).where(
+                        tasks.c.carry_on.is_not(None)
+                    )
+                )
+            }
+        assert len(slots) == len(missed_keys) == 3 and min(slots) == clock.date()
+        c.patch(
+            "/v1/me/settings",
+            headers=auth,
+            json={"daily_minutes": 30, "notification_time": None},
+        ).raise_for_status()
+        for scheduled_date, key in sorted(slots.items()):
+            clock = datetime.combine(scheduled_date, clock.timetz())
+            work = assignments()
+            assert {(t["kind"], t["content_id"]) for t in work} & missed_keys == {key}
+            assert sum(t["minutes"] for t in work) <= 30
+            for job in work:
+                for action in ("start", "complete"):
+                    c.post(
+                        f"/v1/plan/tasks/{job['id']}/{action}", headers=auth
+                    ).raise_for_status()
 
 
 def test_withdrawn_lesson_is_replaced_before_start(demo: Settings, engine: Engine) -> None:
