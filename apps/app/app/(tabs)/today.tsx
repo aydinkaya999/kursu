@@ -13,6 +13,14 @@ export default function Today() {
         {tr.nav.today}
       </Label>
       <TodayPlacement />
+      <Link href="/settings" asChild>
+        <Action
+          accessibilityRole="link"
+          accessibilityLabel={tr.account.settings}
+        >
+          <Label>{tr.account.settings}</Label>
+        </Action>
+      </Link>
       <HealthPanel />
       {__DEV__ && (
         <Link href="/gallery" asChild>

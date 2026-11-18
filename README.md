@@ -34,13 +34,21 @@ Press **w** for web, **i** for the iOS Simulator on macOS, or **a** for an Andro
 
 ## App shell and component gallery
 
-Open `/` to start. A new guest chooses a teaching field, daily study time and first or repeat attempt. **Seviye testine başla** opens the untimed 30-question test. **Önce uygulamayı gez** saves the profile and opens Today. Each answer is saved on the server. Returning to Today on the same browser or installation offers the next unanswered question. The result shows a net range, the six subtests ordered by accuracy and a first-week preview. A ten-question retake opens 14 Istanbul calendar days after completion. The result also links to the account entry screen. Guest continuation works there, and account creation is scheduled for M4.
+Open `/` to start. A new guest chooses a teaching field, daily study time and first or repeat attempt. **Seviye testine başla** opens the untimed 30-question test. **Önce uygulamayı gez** saves the profile and opens Today. Each answer is saved on the server. Returning to Today on the same browser or installation offers the next unanswered question. The result shows a net range, the six subtests ordered by accuracy and a first-week preview. A ten-question retake opens 14 Istanbul calendar days after completion. From the result or Settings, sign up with an email code, Google or Apple. Registering keeps the guest history. Signing into an existing identity merges both histories.
 
 The API renews guest sessions using an HttpOnly cookie on web and secure OS storage on mobile. Serve the web app and API over HTTPS on the same site in production, configure the web origin in `APP_ORIGIN` and supply a stable private `JWT_SECRET` of at least 32 bytes. Use the same hostname for both servers in local web development. The countdown and retake availability come from the server.
 
 The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Today includes the live health check and the candidate’s placement actions.
 
 In development, select **Bileşen galerisi** on Today on any platform, or open `http://localhost:8081/gallery` on web. Try the selection controls, question map and navigation previews there. The pinned **Bugüne dön** button returns to Today. The sample state lasts for the current gallery visit. The app bundles the five Plus Jakarta Sans weights locally and renders the reference icons with SVG. Production builds protect the gallery route. A static web host should serve `index.html` for application routes so deep links can enter the shell.
+
+## Accounts and settings
+
+In local development, **E-posta ile devam et** sends the six-digit code to the API terminal. The code lasts ten minutes and permits five attempts. Production uses SMTP with STARTTLS. Set `EMAIL_SENDER`, `SMTP_HOST`, `SMTP_PORT` and, when required, `SMTP_USERNAME` and `SMTP_PASSWORD`. Deploy the shared Turkish email template from `apps/app/src/i18n/email.json` alongside the service.
+
+For Google, configure the web client ID first in `GOOGLE_CLIENT_IDS` and set `GOOGLE_CLIENT_SECRET`. For Apple, put the Services ID first in `APPLE_AUDIENCES` and supply its signed, unexpired `APPLE_CLIENT_SECRET`. Set `API_PUBLIC_ORIGIN` to the external HTTPS API origin. Register its `/v1/auth/callback/google` and `/v1/auth/callback/apple` paths with their respective providers. The system browser uses the same registered HTTPS callback on all platforms. Native releases return through the registered `kursu://auth` app scheme. Test that return on a development or release build with the app scheme installed. Only the API holds provider secrets. [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect) · [Sign in with Apple](https://developer.apple.com/documentation/signinwithapplerestapi)
+
+Settings supports daily minutes, an optional Istanbul notification time, the AI-content disclosure, legal-text slots, logout on the current device and confirmed account deletion. The privacy and terms texts await counsel.
 
 ## Commands
 

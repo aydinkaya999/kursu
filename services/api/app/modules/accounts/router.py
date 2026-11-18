@@ -40,9 +40,10 @@ async def create_guest(
     # Resuming a web guest here also makes a repeated bootstrap safe after a lost response.
     web = data.platform == "web"
     cookie = request.cookies.get(COOKIE) if web else None
+    family = None
     if cookie:
         try:
-            user = await consume_refresh(session, cookie, now)
+            user, family = await consume_refresh(session, cookie, now)
         except ApiError:
             user = None
     else:
@@ -50,7 +51,7 @@ async def create_guest(
     if user is None:
         user = uuid4()
         await session.execute(insert(users).values(id=user, is_guest=True, created_at=now))
-    tokens = await issue(session, request, response, user, now, web)
+    tokens = await issue(session, request, response, user, now, web, family)
     await session.commit()
     return tokens
 
@@ -69,8 +70,8 @@ async def refresh(
     raw = request.cookies.get(COOKIE) if web else data.refresh_token
     if not raw:
         raise unauthorized()
-    user = await consume_refresh(session, raw, now)
-    tokens = await issue(session, request, response, user, now, web)
+    user, family = await consume_refresh(session, raw, now)
+    tokens = await issue(session, request, response, user, now, web, family)
     await session.commit()
     return tokens
 

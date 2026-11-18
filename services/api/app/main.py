@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.http import ApiError, ErrorBody, handle_error
 from app.core.settings import Settings
+from app.modules.accounts.access import router as access_router
 from app.modules.accounts.router import router as account_router
 from app.modules.content.router import router as catalogue_router
 from app.modules.placement.router import router as placement_router
@@ -58,12 +59,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=[config.app_origin],
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
     application.include_router(system_router, prefix="/v1")
     application.include_router(catalogue_router, prefix="/v1")
-    for router in (account_router, placement_router, config_router):
+    for router in (account_router, access_router, placement_router, config_router):
         application.include_router(router, prefix="/v1")
     return application
 

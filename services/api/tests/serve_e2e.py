@@ -58,7 +58,21 @@ def main() -> None:
                 ],
             )
         )
-        uvicorn.run("app.main:app", host="127.0.0.1", port=args.port)
+        from app.main import create_app
+        from app.modules.accounts.email_login import email_sender
+
+        app = create_app()
+        mailbox = Path(__file__).resolve().parents[3] / "apps/app/test-results/mailbox"
+
+        class TestInbox:
+            def send(self, email: str, code: str) -> None:
+                from hashlib import sha256
+
+                mailbox.mkdir(parents=True, exist_ok=True)
+                (mailbox / sha256(email.encode()).hexdigest()).write_text(code)
+
+        app.dependency_overrides[email_sender] = TestInbox
+        uvicorn.run(app, host="127.0.0.1", port=args.port)
     finally:
         with engine.begin() as conn:
             conn.execute(DropSchema(schema, cascade=True))

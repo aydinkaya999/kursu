@@ -15,20 +15,28 @@ export function requireSuccess<R extends { status: number }>(
 }
 
 const web = Platform.OS === "web";
-const platform = web ? "web" : "native";
+export const platform = web ? "web" : "native";
+export const transport = {
+  credentials: web ? ("include" as const) : ("omit" as const),
+};
 const key = "kursu.guest.refresh";
 const memory = createStore<{ access: string | null }>(() => ({ access: null }));
 let pending: Promise<string> | undefined;
+const sessionChanges =
+  web &&
+  typeof window !== "undefined" &&
+  typeof BroadcastChannel !== "undefined"
+    ? new BroadcastChannel("kursu-account-changed")
+    : undefined;
+if (sessionChanges)
+  sessionChanges.onmessage = () => window.location.replace("/");
 
 async function credentials(initial: boolean) {
   const refresh = web ? null : await SecureStore.getItemAsync(key);
-  const options = {
-    credentials: web ? ("include" as const) : ("omit" as const),
-  };
   async function acquire() {
     if (!initial || refresh) {
       const response = await client["/v1/auth/refresh"].post({
-        ...options,
+        ...transport,
         json: { platform, refresh_token: refresh },
       });
       if (response.status === 200) return response.json();
@@ -36,17 +44,33 @@ async function credentials(initial: boolean) {
         throw new RequestFailure(response.status);
     }
     const response = await client["/v1/auth/guest"].post({
-      ...options,
+      ...transport,
       json: { platform },
     });
     requireSuccess(response);
     return response.json();
   }
-  const tokens = await acquire();
+  return acceptTokens(await acquire());
+}
+
+export async function acceptTokens(tokens: {
+  access_token: string;
+  refresh_token?: string | null;
+}) {
   if (!web && tokens.refresh_token)
     await SecureStore.setItemAsync(key, tokens.refresh_token);
   memory.setState({ access: tokens.access_token });
   return tokens.access_token;
+}
+
+export function notifyAccountChange() {
+  sessionChanges?.postMessage("changed");
+}
+
+export async function forgetSession() {
+  if (!web) await SecureStore.deleteItemAsync(key);
+  memory.setState({ access: null });
+  notifyAccountChange();
 }
 
 function renew(initial: boolean) {

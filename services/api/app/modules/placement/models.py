@@ -30,7 +30,7 @@ attempts = Table(
     Column("completed_at", DateTime(timezone=True)),
     Column("result", JSONB(none_as_null=True)),
     CheckConstraint("kind IN ('full','short')", name="ck_placement_kind"),
-    CheckConstraint("state IN ('active','completed')", name="ck_placement_state"),
+    CheckConstraint("state IN ('active','completed','paused')", name="ck_placement_state"),
     Index(
         "uq_active_placement_user",
         "user_id",

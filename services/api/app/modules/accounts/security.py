@@ -49,23 +49,50 @@ async def current_user(
             options={"require": ["exp", "sub", "iat"]},
         )
         user_id = UUID(claims["sub"])
+        family = UUID(claims["sid"]) if "sid" in claims else None
     except (jwt.InvalidTokenError, ValueError, TypeError) as error:
         raise unauthorized() from error
+    policy = (
+        select(refresh_tokens.c.id)
+        .where(
+            refresh_tokens.c.user_id == user_id,
+            refresh_tokens.c.family_id == family,
+            refresh_tokens.c.revoked_at.is_(None),
+        )
+        .exists()
+        if family
+        else users.c.legacy_access
+    )
     if (
         await session.scalar(
-            select(users.c.id).where(users.c.id == user_id, users.c.deleted_at.is_(None))
+            select(users.c.id).where(
+                users.c.id == user_id, users.c.deleted_at.is_(None), policy
+            )
         )
         is None
     ):
         raise unauthorized()
+    request.state.session_family = family
     return user_id
 
 
 CurrentUser = Annotated[UUID, Depends(current_user)]
 
 
-async def consume_refresh(session: AsyncSession, raw: str, now: datetime) -> UUID:
+async def consume_refresh(
+    session: AsyncSession, raw: str, now: datetime
+) -> tuple[UUID, UUID]:
     token_hash = sha256(raw.encode()).hexdigest()
+    await session.execute(
+        select(users.c.id)
+        .where(
+            users.c.id
+            == select(refresh_tokens.c.user_id)
+            .where(refresh_tokens.c.token_hash == token_hash)
+            .scalar_subquery()
+        )
+        .with_for_update()
+    )
     row = (
         await session.execute(
             update(refresh_tokens)
@@ -78,12 +105,12 @@ async def consume_refresh(session: AsyncSession, raw: str, now: datetime) -> UUI
                 ),
             )
             .values(revoked_at=now)
-            .returning(refresh_tokens.c.user_id)
+            .returning(refresh_tokens.c.user_id, refresh_tokens.c.family_id)
         )
-    ).scalar_one_or_none()
+    ).one_or_none()
     if row is None:
         raise unauthorized()
-    return UUID(str(row))
+    return row.user_id, row.family_id
 
 
 async def issue(
@@ -93,9 +120,17 @@ async def issue(
     user: UUID,
     now: datetime,
     web: bool,
+    family: UUID | None = None,
 ) -> Tokens:
+    family = family or uuid4()
     access = jwt.encode(
-        {"sub": str(user), "iss": "kursu", "iat": now, "exp": now + ACCESS_TTL},
+        {
+            "sub": str(user),
+            "sid": str(family),
+            "iss": "kursu",
+            "iat": now,
+            "exp": now + ACCESS_TTL,
+        },
         signing_key(request),
         algorithm="HS256",
     )
@@ -104,6 +139,7 @@ async def issue(
         insert(refresh_tokens).values(
             id=uuid4(),
             user_id=user,
+            family_id=family,
             token_hash=sha256(raw.encode()).hexdigest(),
             expires_at=now + REFRESH_TTL,
         )

@@ -85,7 +85,10 @@ async def placement_status(
 ) -> PlacementStatus:
     a = attempts.c
     active = await session.scalar(
-        select(a.id).where(a.user_id == user, a.state == "active")
+        select(a.id)
+        .where(a.user_id == user, a.state.in_(("active", "paused")))
+        .order_by((a.state == "active").desc(), a.started_at, a.id)
+        .limit(1)
     )
     last = (
         await session.execute(
@@ -212,6 +215,11 @@ async def start(session: AsyncSession, user: UUID, kind: Kind, now: datetime) ->
         raise ApiError(409, "conflict", "Complete onboarding first")
     status = await placement_status(session, user, now)
     if status.active_id:
+        await session.execute(
+            update(attempts)
+            .where(attempts.c.id == status.active_id, attempts.c.state == "paused")
+            .values(state="active")
+        )
         return await state(session, user, status.active_id)
     if kind == "full" and status.latest_id:
         return await state(session, user, status.latest_id)

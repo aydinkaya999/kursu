@@ -15,6 +15,16 @@ class Settings(BaseSettings):
     jwt_secret: SecretStr = SecretStr("")
     app_env: str = "development"
     app_origin: str = "http://localhost:8081"
+    api_public_origin: str = "http://localhost:8000"
+    email_sender: str = ""
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    google_client_ids: str = ""
+    google_client_secret: SecretStr = SecretStr("")
+    apple_audiences: str = ""
+    apple_client_secret: SecretStr = SecretStr("")
 
     @property
     def production(self) -> bool:
