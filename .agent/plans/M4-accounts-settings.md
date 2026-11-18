@@ -28,3 +28,5 @@ Exercise all three sign-up methods with a completed placement, merge into an exi
 The email, Google and Apple API journeys each retained a completed 30-question placement, merged a second guest, rotated credentials, logged out one device and deleted the account. Negative cases cover expiration, attempt limits, signature claims and challenge ownership. Browser signup, preferences, legal slots and deletion passed at both widths. The local checks passed with 49 Jest and 28 pytest cases. Real provider registration, SMTP credentials and counsel-supplied text are deployment inputs. See the Accounts and settings section in README.md.
 
 Expo WebBrowser handles the operating system's authentication session. PyJWT's cryptography support verifies provider signatures and email-validator validates the address fields. The joint checks and migration round-trip are recorded in the M5 plan.
+
+The SMTP sender reads the packaged copy exported from `apps/app/src/i18n/tr.ts`. Tests compare the export with the catalogue and render a six-digit code into an email through a local transport double.

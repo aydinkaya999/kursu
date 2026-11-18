@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
@@ -12,7 +13,7 @@ from sqlalchemy import Engine, func, select, update
 
 from app.core.settings import Settings
 from app.main import create_app
-from app.modules.accounts.email_login import email_sender
+from app.modules.accounts.email_login import SMTPSender, email_sender
 from app.modules.accounts.models import (
     email_codes,
     identities,
@@ -31,6 +32,19 @@ class Inbox:
 
     def send(self, email: str, code: str) -> None:
         self.codes[email] = code
+
+
+def test_smtp_renders_the_packaged_template_with_the_code() -> None:
+    settings = Settings(smtp_host="mail.example.org", email_sender="sender@example.org")
+    with patch("smtplib.SMTP", autospec=True) as connect:
+        SMTPSender(settings).send("candidate@example.org", "012345")
+    mail = connect.return_value.__enter__.return_value
+    mail.starttls.assert_called_once()
+    message = mail.send_message.call_args.args[0]
+    assert (
+        message["From"] == "sender@example.org" and message["To"] == "candidate@example.org"
+    )
+    assert message["Subject"] and "012345" in message.get_content()
 
 
 class TestIssuer(IdentityProvider):

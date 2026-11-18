@@ -13,6 +13,7 @@ import {
   signOut,
 } from "../src/features/accounts/api";
 import { tr } from "../src/i18n/tr";
+import emailTemplate from "../../../services/api/app/modules/accounts/email.tr.json";
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({}),
   router: { push: jest.fn(), replace: jest.fn() },
@@ -20,6 +21,9 @@ jest.mock("expo-router", () => ({
 jest.mock("expo-web-browser", () => ({ openAuthSessionAsync: jest.fn() }));
 jest.mock("../src/features/accounts/api");
 const t = tr.account;
+test("the API email template matches the Turkish catalogue", () => {
+  expect(emailTemplate).toEqual(tr.emailMessage);
+});
 function wrap(node: React.ReactNode) {
   const client = new QueryClient({
     defaultOptions: {

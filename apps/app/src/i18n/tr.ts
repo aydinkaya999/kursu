@@ -1,6 +1,8 @@
-import emailMessage from "./email.json";
 export const tr = {
-  emailMessage,
+  emailMessage: {
+    subject: "Kürsü giriş kodun",
+    body: "Kürsü giriş kodun: {code}\nKod 10 dakika geçerlidir.",
+  },
   today: {
     title: (n: number) => "Bugün " + n + " görevin var",
     summary: (n: number, done: string) => n + " görevden " + done + " tamam",

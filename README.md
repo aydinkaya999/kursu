@@ -44,7 +44,7 @@ In development, select **Bileşen galerisi** on Today on any platform, or open `
 
 ## Accounts and settings
 
-In local development, **E-posta ile devam et** sends the six-digit code to the API terminal. The code lasts ten minutes and permits five attempts. Production uses SMTP with STARTTLS. Set `EMAIL_SENDER`, `SMTP_HOST`, `SMTP_PORT` and, when required, `SMTP_USERNAME` and `SMTP_PASSWORD`. Deploy the shared Turkish email template from `apps/app/src/i18n/email.json` alongside the service.
+In local development, **E-posta ile devam et** sends the six-digit code to the API terminal. The code lasts ten minutes and permits five attempts. Production uses SMTP with STARTTLS. Set `EMAIL_SENDER`, `SMTP_HOST`, `SMTP_PORT` and, when required, `SMTP_USERNAME` and `SMTP_PASSWORD`. The API ships its Turkish email template. After changing the email text in `apps/app/src/i18n/tr.ts`, run `pnpm gen:email` and commit the generated template.
 
 For Google, configure the web client ID first in `GOOGLE_CLIENT_IDS` and set `GOOGLE_CLIENT_SECRET`. For Apple, put the Services ID first in `APPLE_AUDIENCES` and supply its signed, unexpired `APPLE_CLIENT_SECRET`. Set `API_PUBLIC_ORIGIN` to the external HTTPS API origin. Register its `/v1/auth/callback/google` and `/v1/auth/callback/apple` paths with their respective providers. The system browser uses the same registered HTTPS callback on all platforms. Native releases return through the registered `kursu://auth` app scheme. Test that return on a development or release build with the app scheme installed. Only the API holds provider secrets. [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect) · [Sign in with Apple](https://developer.apple.com/documentation/signinwithapplerestapi)
 

@@ -40,7 +40,7 @@ class SMTPSender:
         cfg = self.settings
         message = EmailMessage()
         message["From"], message["To"] = cfg.email_sender, email
-        catalogue = Path(__file__).resolve().parents[5] / "apps/app/src/i18n/email.json"
+        catalogue = Path(__file__).with_name("email.tr.json")
         copy = json.loads(catalogue.read_text())
         message["Subject"] = copy["subject"]
         message.set_content(copy["body"].format(code=code))
