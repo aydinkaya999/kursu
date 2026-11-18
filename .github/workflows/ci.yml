@@ -1,0 +1,45 @@
+name: Checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - uses: astral-sh/setup-uv@v9
+        with:
+          python-version: "3.12"
+      - run: pnpm setup
+      - name: Compare PostgreSQL with the migration metadata
+        run: uv run --directory services/api alembic check
+      - name: Check generated API client
+        run: |
+          pnpm gen:api
+          git diff --exit-code -- packages/api-client
+          test -z "$(git ls-files --others --exclude-standard packages/api-client)"
+      - run: pnpm check
+      - run: pnpm --filter @kursu/app exec playwright install-deps chromium
+      - run: pnpm test:e2e
+      - name: Bundle both native platforms
+        run: pnpm --filter @kursu/app exec expo export --platform ios --platform android
+      - name: Start both development servers
+        run: |
+          setsid pnpm dev:api &
+          api_pid=$!
+          setsid pnpm dev:app --localhost &
+          expo_pid=$!
+          trap 'kill -- "-$api_pid" "-$expo_pid" 2>/dev/null || true' EXIT
+          curl -fsS --max-time 5 --retry 30 --retry-delay 1 --retry-connrefused http://localhost:8000/v1/health
+          curl -fsS --max-time 5 --retry 60 --retry-delay 1 --retry-connrefused http://localhost:8081/status | grep -Fx 'packager-status:running'

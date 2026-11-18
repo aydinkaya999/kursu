@@ -1,0 +1,45 @@
+[project]
+name = "kursu-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.17,<2",
+    "fastapi==0.121.3",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic==2.13.4",
+    "pydantic-settings>=2.11,<3",
+    "sqlalchemy[asyncio]>=2.0.44,<2.1",
+    "uvicorn>=0.38,<1",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28,<0.29",
+    "mypy>=1.18,<3",
+    "pytest>=8.4,<10",
+    "ruff>=0.14,<1",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 92
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["alembic"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["app", "alembic/env.py", "alembic/versions", "tests"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config"
+pythonpath = ["."]
+testpaths = ["tests"]

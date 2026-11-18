@@ -1,0 +1,23 @@
+{
+  "name": "kursu",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.6.0",
+  "engines": {
+    "node": "^22.13.0 || ^24.3.0 || ^26.0.0 || >=27.0.0"
+  },
+  "scripts": {
+    "setup": "sh scripts/setup.sh",
+    "dev:api": "uv run --directory services/api uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "dev:app": "cd apps/app && node --env-file-if-exists=../../.env --run start --",
+    "gen:api": "uv run --directory services/api python -m app.export_client",
+    "lint": "pnpm --filter @kursu/app lint && prettier --check apps/app packages/api-client package.json pnpm-workspace.yaml docker-compose.yml .github/workflows/ci.yml && uv run --directory services/api ruff check . && uv run --directory services/api ruff format --check .",
+    "typecheck": "pnpm -r --if-present run typecheck && uv run --directory services/api mypy",
+    "test": "pnpm --filter @kursu/app test && uv run --directory services/api pytest",
+    "test:e2e": "pnpm --filter @kursu/app e2e",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "prettier": "3.8.1"
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "note": "Sample content written for development. These are not exam questions. Replace with the output of the content pipeline before launch.",
+  "fields": [
+    { "id": "sinif-ogretmenligi", "name": "Sınıf Öğretmenliği", "score_type": "P2" },
+    { "id": "okul-oncesi-ogretmenligi", "name": "Okul Öncesi Öğretmenliği", "score_type": "P2" },
+    { "id": "turkce-ogretmenligi", "name": "Türkçe Öğretmenliği", "score_type": "P2" },
+    { "id": "ingilizce-ogretmenligi", "name": "İngilizce Öğretmenliği", "score_type": "P3" }
+  ],
+  "subtests": [
+    { "id": "verbal", "name": "Sözel Yetenek", "short_name": "Sözel", "question_count": 15, "exam_order": 1, "weight_p1": 20 },
+    { "id": "quantitative", "name": "Sayısal Yetenek", "short_name": "Sayısal", "question_count": 15, "exam_order": 2, "weight_p1": 20 },
+    { "id": "history", "name": "Tarih", "short_name": "Tarih", "question_count": 6, "exam_order": 3, "weight_p1": 15 },
+    { "id": "geography", "name": "Türkiye Coğrafyası", "short_name": "Coğrafya", "question_count": 6, "exam_order": 4, "weight_p1": 10 },
+    { "id": "education", "name": "Eğitim Bilimleri", "short_name": "Eğitim Bilimleri", "question_count": 30, "exam_order": 5, "weight_p1": 25 },
+    { "id": "legislation", "name": "Mevzuat", "short_name": "Mevzuat", "question_count": 8, "exam_order": 6, "weight_p1": 10 }
+  ],
+  "topics": [
+    { "id": "legislation.law-1739-principles", "subtest_id": "legislation", "name": "1739: temel ilkeler" },
+    { "id": "education.development-theories", "subtest_id": "education", "name": "Gelişim kuramları" },
+    { "id": "quantitative.percent-ratio", "subtest_id": "quantitative", "name": "Yüzde ve oran problemleri" },
+    { "id": "quantitative.work-problems", "subtest_id": "quantitative", "name": "İşçi problemleri" },
+    { "id": "history.ottoman-foundation", "subtest_id": "history", "name": "Osmanlı kuruluş dönemi" },
+    { "id": "geography.climate-types", "subtest_id": "geography", "name": "Türkiye'nin iklim tipleri" }
+  ],
+  "objectives": [
+    { "id": "obj.legislation.art4-vs-art8", "topic_id": "legislation.law-1739-principles", "text": "1739 sayılı Kanun'daki genellik ve eşitlik ile fırsat ve imkân eşitliği ilkelerini ayırt eder." },
+    { "id": "obj.education.zpd", "topic_id": "education.development-theories", "text": "Vygotsky'nin yakınsal gelişim alanı kavramını örnek bir durumda tanır." },
+    { "id": "obj.quantitative.percent-equation", "topic_id": "quantitative.percent-ratio", "text": "Yüzde değişimi içeren bir durumu denklem kurarak çözer." }
+  ],
+  "misconceptions": [
+    { "id": "mis.legislation.art4-for-art8", "topic_id": "legislation.law-1739-principles", "text": "Maddi destek içeren uygulamaları genellik ve eşitlik ilkesine bağlamak" },
+    { "id": "mis.education.piaget-for-vygotsky", "topic_id": "education.development-theories", "text": "Yardımla öğrenmeyi Piaget'nin kavramlarıyla açıklamak" }
+  ],
+  "lessons": [
+    {
+      "id": "lesson.legislation.firsat-ve-imkan-esitligi",
+      "topic_id": "legislation.law-1739-principles",
+      "title": "Fırsat ve imkân eşitliği",
+      "minutes": 5,
+      "status": "published",
+      "source": {
+        "kind": "law",
+        "name": "1739 sayılı Millî Eğitim Temel Kanunu",
+        "short_name": "1739 sayılı Kanun",
+        "articles": [4, 8]
+      },
+      "cards": [
+        {
+          "kind": "definition",
+          "title": "Fırsat ve imkân eşitliği nedir?",
+          "blocks": [
+            { "heading": "Madde 8", "text": "Eğitimde kadın erkek herkese fırsat ve imkân eşitliği sağlanır. Devlet, maddi imkânı olmayan başarılı öğrencileri parasız yatılılık, burs ve krediyle destekler; özel eğitime ve korunmaya muhtaç çocuklar için özel tedbirler alır." }
+          ]
+        },
+        {
+          "kind": "example",
+          "title": "Günlük hayattan bir örnek",
+          "blocks": [
+            { "heading": "Durum", "text": "Ailesinin geliri düşük olan başarılı bir öğrenci parasız yatılı bir okula yerleştirilir ve burs alır." },
+            { "heading": "İlke", "text": "Bu, kapıyı açık tutmanın ötesinde bir destektir; fırsat ve imkân eşitliğinin uygulamasıdır." }
+          ]
+        },
+        {
+          "kind": "confused",
+          "title": "Fırsat ve imkân eşitliği, genellik ve eşitlik değildir",
+          "blocks": [
+            { "heading": "Genellik ve eşitlik · madde 4", "text": "Okulun kapısı herkese açıktır. Dil, ırk, cinsiyet, engellilik ve din ayrımı yapılmaz; kimseye imtiyaz tanınmaz." },
+            { "heading": "Fırsat ve imkân eşitliği · madde 8", "text": "Kapının açık olması yetmez. Devlet, maddi imkânı olmayan başarılı öğrenciyi parasız yatılılık, burs ve krediyle destekler." }
+          ],
+          "tip": "Soruda burs, yatılılık ya da maddi imkân geçiyorsa madde 8'i düşün."
+        },
+        {
+          "kind": "exam",
+          "title": "Sınavda nasıl sorulur?",
+          "blocks": [
+            { "heading": "Soru kalıbı", "text": "Soru bir uygulamayı anlatır ve hangi temel ilkeye dayandığını sorar." },
+            { "heading": "İpucu", "text": "Burs, yatılılık, kredi ya da özel eğitim geçiyorsa yanıt fırsat ve imkân eşitliğidir. Herkese açık olma ve ayrım yapmama geçiyorsa yanıt genellik ve eşitliktir." }
+          ]
+        }
+      ],
+      "check_questions": [
+        { "question_id": "q.legislation.0002", "card_position": 3 },
+        { "question_id": "q.legislation.0003", "card_position": 1 }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "q.legislation.0001",
+      "subtest_id": "legislation",
+      "topic_id": "legislation.law-1739-principles",
+      "objective_id": "obj.legislation.art4-vs-art8",
+      "difficulty": 2,
+      "status": "published",
+      "is_placeholder": false,
+      "stem": "Geliri düşük bir ailenin başarılı çocuğu, devlet tarafından parasız yatılı okula yerleştiriliyor. Bu uygulama 1739 sayılı Kanun'un hangi temel ilkesine dayanır?",
+      "options": { "A": "Genellik ve eşitlik", "B": "Fırsat ve imkân eşitliği", "C": "Yöneltme", "D": "Süreklilik", "E": "Eğitim hakkı" },
+      "correct_option": "B",
+      "rationales": {
+        "A": { "text": "Genellik ve eşitlik (madde 4), okulların ayrım gözetmeden herkese açık olmasıdır. Buradaki uygulama maddi imkânı olmayan başarılı öğrenciyi destekliyor; bu, madde 8'deki fırsat ve imkân eşitliğidir.", "misconception_id": "mis.legislation.art4-for-art8" },
+        "B": { "text": "Madde 8, maddi imkânı olmayan başarılı öğrencilerin parasız yatılılık, burs ve krediyle desteklenmesini öngörür. Uygulama tam olarak budur." },
+        "C": { "text": "Yöneltme (madde 6), bireylerin ilgi ve yetenekleri doğrultusunda program ve okullara yönlendirilmesidir; maddi destekle ilgili değildir." },
+        "D": { "text": "Süreklilik (madde 9), genel ve mesleki eğitimin hayat boyu sürmesidir; maddi destekle ilgili değildir." },
+        "E": { "text": "Eğitim hakkı (madde 7), ilköğretim görmenin her vatandaşın hakkı olduğunu belirtir; başarılı öğrenciye verilen desteği anlatmaz." }
+      },
+      "solution_steps": [],
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 8, "quote": "… parasız yatılılık, burs, kredi ve başka yollarla gerekli yardımlar yapılır." },
+      "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
+    },
+    {
+      "id": "q.legislation.0002",
+      "subtest_id": "legislation",
+      "topic_id": "legislation.law-1739-principles",
+      "objective_id": "obj.legislation.art4-vs-art8",
+      "difficulty": 1,
+      "status": "published",
+      "is_placeholder": false,
+      "stem": "Eğitim kurumlarının dil, ırk, cinsiyet, engellilik ve din ayrımı gözetilmeksizin herkese açık olması, 1739 sayılı Kanun'un hangi temel ilkesidir?",
+      "options": { "A": "Genellik ve eşitlik", "B": "Fırsat ve imkân eşitliği", "C": "Yöneltme", "D": "Süreklilik", "E": "Planlılık" },
+      "correct_option": "A",
+      "rationales": {
+        "A": { "text": "Madde 4, eğitim kurumlarının ayrım gözetilmeksizin herkese açık olduğunu ve kimseye imtiyaz tanınmadığını belirtir." },
+        "B": { "text": "Fırsat ve imkân eşitliği (madde 8) kapının açık olmasından öte, maddi destek ve özel tedbirlerle ilgilidir.", "misconception_id": "mis.legislation.art4-for-art8" },
+        "C": { "text": "Yöneltme (madde 6), bireylerin ilgi ve yetenekleri doğrultusunda yönlendirilmesidir." },
+        "D": { "text": "Süreklilik (madde 9), eğitimin hayat boyu sürmesidir." },
+        "E": { "text": "Planlılık (madde 14), eğitimin kalkınma hedeflerine uygun planlanmasıdır." }
+      },
+      "solution_steps": [],
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 4 },
+      "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
+    },
+    {
+      "id": "q.legislation.0003",
+      "subtest_id": "legislation",
+      "topic_id": "legislation.law-1739-principles",
+      "objective_id": "obj.legislation.art4-vs-art8",
+      "difficulty": 1,
+      "status": "published",
+      "is_placeholder": false,
+      "stem": "Özel eğitime ve korunmaya muhtaç çocukları yetiştirmek için özel tedbirler alınması, 1739 sayılı Kanun'un hangi temel ilkesinin gereğidir?",
+      "options": { "A": "Genellik ve eşitlik", "B": "Eğitim hakkı", "C": "Fırsat ve imkân eşitliği", "D": "Yöneltme", "E": "Süreklilik" },
+      "correct_option": "C",
+      "rationales": {
+        "A": { "text": "Genellik ve eşitlik (madde 4) ayrım yapılmamasını anlatır; özel tedbir almayı düzenlemez.", "misconception_id": "mis.legislation.art4-for-art8" },
+        "B": { "text": "Eğitim hakkı (madde 7), ilköğretim görmenin her vatandaşın hakkı olduğunu belirtir." },
+        "C": { "text": "Madde 8, özel eğitime ve korunmaya muhtaç çocuklar için özel tedbirler alınmasını öngörür." },
+        "D": { "text": "Yöneltme (madde 6), bireylerin ilgi ve yetenekleri doğrultusunda yönlendirilmesidir." },
+        "E": { "text": "Süreklilik (madde 9), eğitimin hayat boyu sürmesidir." }
+      },
+      "solution_steps": [],
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 8 },
+      "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
+    },
+    {
+      "id": "q.education.0001",
+      "subtest_id": "education",
+      "topic_id": "education.development-theories",
+      "objective_id": "obj.education.zpd",
+      "difficulty": 2,
+      "status": "published",
+      "is_placeholder": false,
+      "stem": "Bir öğrenci tek başına çözemediği bir problemi, öğretmeninin verdiği ipuçlarıyla çözebilmektedir. Bu durum Vygotsky'nin hangi kavramıyla açıklanır?",
+      "options": { "A": "Özümleme", "B": "Yakınsal gelişim alanı", "C": "Dengeleme", "D": "Nesne sürekliliği", "E": "Kendiliğinden geri gelme" },
+      "correct_option": "B",
+      "rationales": {
+        "A": { "text": "Özümleme, Piaget'nin kavramıdır: yeni bilginin var olan şemaya yerleştirilmesi. Yardımla yapılabilenleri anlatmaz.", "misconception_id": "mis.education.piaget-for-vygotsky" },
+        "B": { "text": "Yakınsal gelişim alanı, çocuğun tek başına yapabildikleri ile bir yetişkinin ya da akranın yardımıyla yapabildikleri arasındaki farktır." },
+        "C": { "text": "Dengeleme, Piaget'de özümleme ve uyumsama arasında kurulan dengedir.", "misconception_id": "mis.education.piaget-for-vygotsky" },
+        "D": { "text": "Nesne sürekliliği, Piaget'nin duyusal-motor dönemine ait bir kazanımdır: nesnenin görülmediğinde de var olduğunu bilmek.", "misconception_id": "mis.education.piaget-for-vygotsky" },
+        "E": { "text": "Kendiliğinden geri gelme, klasik koşullanmada sönen bir tepkinin yeniden ortaya çıkmasıdır." }
+      },
+      "solution_steps": [],
+      "source": { "kind": "lesson", "lesson_title": "Yakınsal gelişim alanı" },
+      "related_lesson_id": null
+    },
+    {
+      "id": "q.quantitative.0001",
+      "subtest_id": "quantitative",
+      "topic_id": "quantitative.percent-ratio",
+      "objective_id": "obj.quantitative.percent-equation",
+      "difficulty": 2,
+      "status": "published",
+      "is_placeholder": false,
+      "stem": "Bir sınıftaki öğrencilerin %40'ı kızdır. Sınıfa 5 kız öğrenci daha katılınca kızların oranı %50 oluyor. Başlangıçta sınıf mevcudu kaçtır?",
+      "options": { "A": "20", "B": "25", "C": "30", "D": "35", "E": "40" },
+      "correct_option": "B",
+      "rationales": {
+        "A": { "text": "Mevcut 20 olsaydı 8 kız olurdu; 5 kız eklenince oran 13/25, yani %52 olur." },
+        "B": { "text": "Mevcut 25 ise 10 kız vardır; 5 kız eklenince oran 15/30, yani %50 olur." },
+        "C": { "text": "Mevcut 30 olsaydı 12 kız olurdu; 5 kız eklenince oran 17/35, yani yaklaşık %49 olur." },
+        "D": { "text": "Mevcut 35 olsaydı 14 kız olurdu; 5 kız eklenince oran 19/40, yani %47,5 olur." },
+        "E": { "text": "Mevcut 40 olsaydı 16 kız olurdu; 5 kız eklenince oran 21/45, yani yaklaşık %47 olur." }
+      },
+      "solution_steps": [
+        { "title": "Bilinmeyeni adlandır", "text": "Sınıf mevcudu N olsun. Kız sayısı 0,4 × N'dir." },
+        { "title": "Denklemi kur", "text": "5 kız eklenince: (0,4 × N + 5) / (N + 5) = 0,5" },
+        { "title": "Çöz", "text": "0,4 × N + 5 = 0,5 × N + 2,5. Buradan 0,1 × N = 2,5 ve N = 25 bulunur." }
+      ],
+      "source": { "kind": "lesson", "lesson_title": "Yüzde ve oran problemleri" },
+      "related_lesson_id": null
+    }
+  ]
+}

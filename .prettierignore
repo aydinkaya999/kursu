@@ -1,0 +1,8 @@
+**/node_modules/
+**/.expo/
+**/expo-env.d.ts
+**/dist/
+**/test-results/
+**/playwright-report/
+packages/api-client/src/index.ts
+pnpm-lock.yaml

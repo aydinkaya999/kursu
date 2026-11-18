@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Let the setup script install the workspace dependencies on a fresh checkout.
+verifyDepsBeforeRun: warn
+
+# Metro's watcher and Jest's resolver ship platform-specific binaries.
+allowBuilds:
+  "@parcel/watcher": false
+  unrs-resolver: false
