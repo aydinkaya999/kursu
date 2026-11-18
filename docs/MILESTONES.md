@@ -42,7 +42,7 @@ Acceptance:
 
 ## M2 — Content model, import and placeholders
 
-Scope: reference and content tables; JSON Schemas; `import-content` and `make-placeholders` commands; seed from `docs/fixtures/sample-content.json`; catalogue endpoints.
+Scope includes reference and content tables, JSON Schemas, the `import-content` and `make-placeholders` commands, the sample seed in `content/seed/sample-content.json`, and catalogue endpoints.
 
 Acceptance:
 - `pnpm setup` imports the seed and generates placeholders; running it twice changes nothing.

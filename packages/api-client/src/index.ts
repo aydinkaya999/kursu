@@ -7,6 +7,19 @@ const { createClient }: typeof import("fets") = require("fets");
 export type ApiDocument = {
   "components": {
     "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -19,6 +32,375 @@ export type ApiDocument = {
           "status"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "LawSource": {
+        "properties": {
+          "article": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Article"
+          },
+          "articles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Articles"
+          },
+          "kind": {
+            "const": "law",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "short_name": {
+            "title": "Short Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "short_name"
+        ],
+        "title": "LawSource",
+        "type": "object"
+      },
+      "LessonCard": {
+        "properties": {
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/LessonCardBlock"
+            },
+            "title": "Blocks",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "definition",
+              "example",
+              "confused",
+              "exam"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "tip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tip"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "kind",
+          "title",
+          "blocks",
+          "tip"
+        ],
+        "title": "LessonCard",
+        "type": "object"
+      },
+      "LessonCardBlock": {
+        "properties": {
+          "heading": {
+            "title": "Heading",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "heading",
+          "text"
+        ],
+        "title": "LessonCardBlock",
+        "type": "object"
+      },
+      "LessonDetail": {
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/LessonCard"
+            },
+            "title": "Cards",
+            "type": "array"
+          },
+          "check_questions": {
+            "items": {
+              "$ref": "#/components/schemas/UnansweredQuestion"
+            },
+            "title": "Check Questions",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LawSource"
+              },
+              {
+                "$ref": "#/components/schemas/NotesSource"
+              },
+              {
+                "$ref": "#/components/schemas/LessonSource"
+              }
+            ],
+            "title": "Source"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic_id": {
+            "title": "Topic Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topic_id",
+          "title",
+          "minutes",
+          "is_placeholder",
+          "source",
+          "cards",
+          "check_questions"
+        ],
+        "title": "LessonDetail",
+        "type": "object"
+      },
+      "LessonSource": {
+        "properties": {
+          "kind": {
+            "const": "lesson",
+            "title": "Kind",
+            "type": "string"
+          },
+          "lesson_title": {
+            "title": "Lesson Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "lesson_title"
+        ],
+        "title": "LessonSource",
+        "type": "object"
+      },
+      "LessonSummary": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic_id": {
+            "title": "Topic Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topic_id",
+          "title",
+          "minutes",
+          "is_placeholder"
+        ],
+        "title": "LessonSummary",
+        "type": "object"
+      },
+      "MockSummary": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "published_at",
+          "is_placeholder"
+        ],
+        "title": "MockSummary",
+        "type": "object"
+      },
+      "NotFound": {
+        "properties": {
+          "code": {
+            "const": "not_found",
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "details"
+        ],
+        "title": "NotFound",
+        "type": "object"
+      },
+      "NotesSource": {
+        "properties": {
+          "kind": {
+            "const": "notes",
+            "title": "Kind",
+            "type": "string"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "section"
+        ],
+        "title": "NotesSource",
+        "type": "object"
+      },
+      "QuestionOptions": {
+        "properties": {
+          "A": {
+            "title": "A",
+            "type": "string"
+          },
+          "B": {
+            "title": "B",
+            "type": "string"
+          },
+          "C": {
+            "title": "C",
+            "type": "string"
+          },
+          "D": {
+            "title": "D",
+            "type": "string"
+          },
+          "E": {
+            "title": "E",
+            "type": "string"
+          }
+        },
+        "required": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "title": "QuestionOptions",
         "type": "object"
       },
       "ServiceUnavailable": {
@@ -45,6 +427,167 @@ export type ApiDocument = {
         ],
         "title": "ServiceUnavailable",
         "type": "object"
+      },
+      "Subtest": {
+        "properties": {
+          "exam_order": {
+            "title": "Exam Order",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "question_count": {
+            "title": "Question Count",
+            "type": "integer"
+          },
+          "short_name": {
+            "title": "Short Name",
+            "type": "string"
+          },
+          "weight_p1": {
+            "title": "Weight P1",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "short_name",
+          "question_count",
+          "exam_order",
+          "weight_p1"
+        ],
+        "title": "Subtest",
+        "type": "object"
+      },
+      "TeachingField": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "score_type": {
+            "enum": [
+              "P1",
+              "P2",
+              "P3"
+            ],
+            "title": "Score Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "score_type"
+        ],
+        "title": "TeachingField",
+        "type": "object"
+      },
+      "Topic": {
+        "properties": {
+          "exam_weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Weight"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subtest_id": {
+            "title": "Subtest Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subtest_id",
+          "name",
+          "exam_weight",
+          "is_placeholder"
+        ],
+        "title": "Topic",
+        "type": "object"
+      },
+      "UnansweredQuestion": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "stem",
+          "options"
+        ],
+        "title": "UnansweredQuestion",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
       }
     }
   },
@@ -54,6 +597,31 @@ export type ApiDocument = {
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/fields": {
+      "get": {
+        "operationId": "listFields",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TeachingField"
+                  },
+                  "title": "Response Listfields",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Fields",
+        "tags": [
+          "Catalogue"
+        ]
+      }
+    },
     "/v1/health": {
       "get": {
         "operationId": "getHealth",
@@ -80,6 +648,214 @@ export type ApiDocument = {
           }
         },
         "summary": "Health"
+      }
+    },
+    "/v1/lessons": {
+      "get": {
+        "operationId": "listLessons",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "topic_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Topic Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LessonSummary"
+                  },
+                  "title": "Response Listlessons",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Lessons",
+        "tags": [
+          "Catalogue"
+        ]
+      }
+    },
+    "/v1/lessons/{id}": {
+      "get": {
+        "operationId": "getLesson",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lesson",
+        "tags": [
+          "Catalogue"
+        ]
+      }
+    },
+    "/v1/mocks": {
+      "get": {
+        "operationId": "listMocks",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MockSummary"
+                  },
+                  "title": "Response Listmocks",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Mocks",
+        "tags": [
+          "Catalogue"
+        ]
+      }
+    },
+    "/v1/subtests": {
+      "get": {
+        "operationId": "listSubtests",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Subtest"
+                  },
+                  "title": "Response Listsubtests",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Subtests",
+        "tags": [
+          "Catalogue"
+        ]
+      }
+    },
+    "/v1/topics": {
+      "get": {
+        "operationId": "listTopics",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subtest_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subtest Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Topic"
+                  },
+                  "title": "Response Listtopics",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Topics",
+        "tags": [
+          "Catalogue"
+        ]
       }
     }
   }

@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.settings import Settings
-from app.modules.system.router import router
+from app.modules.content.router import router as catalogue_router
+from app.modules.system.router import router as system_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -37,7 +38,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET"],
     )
-    application.include_router(router, prefix="/v1")
+    application.include_router(system_router, prefix="/v1")
+    application.include_router(catalogue_router, prefix="/v1")
     return application
 
 

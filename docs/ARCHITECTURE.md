@@ -96,7 +96,7 @@ Question payloads sent before an answer contain the stem and options only. The c
 
 ## 7. Content
 
-- Content files are JSON, validated against `content/schema/`. `docs/fixtures/sample-content.json` shows the shape; M2 moves it to `content/seed/` and writes the schemas from it.
+- Offline bundles use the versioned JSON Schema in `content/schema/`. The canonical example is `content/seed/sample-content.json`. The seed configuration is in `content/seed/config.json`.
 - `import-content` is idempotent: it upserts by id and never deletes rows that have answers.
 - `make-placeholders` generates enough clearly fake questions, lessons and mocks to exercise every flow (placement needs every subtest at all three difficulty levels; a mock needs 80). Placeholders carry `is_placeholder = true`, start with "[ÖRNEK]" in the stem, and are refused by the importer when `APP_ENV=production`.
 - Text is plain text with line breaks. Fractions are written `a/b`. Whether maths needs a richer notation is decided by a spike in M6.

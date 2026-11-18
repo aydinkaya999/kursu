@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kürsü offline content bundle, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "note": { "type": "string" },
+    "fields": { "type": "array", "items": { "$ref": "#/$defs/field" } },
+    "subtests": { "type": "array", "items": { "$ref": "#/$defs/subtest" } },
+    "remote_config": { "type": "array", "items": { "$ref": "#/$defs/config" } },
+    "topics": { "type": "array", "items": { "$ref": "#/$defs/topic" } },
+    "objectives": { "type": "array", "items": { "$ref": "#/$defs/topicText" } },
+    "misconceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/topicText" }
+    },
+    "lessons": { "type": "array", "items": { "$ref": "#/$defs/lesson" } },
+    "questions": { "type": "array", "items": { "$ref": "#/$defs/question" } },
+    "mock_exams": { "type": "array", "items": { "$ref": "#/$defs/mockExam" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$" },
+    "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "positiveInt": { "type": "integer", "minimum": 1 },
+    "placeholder": { "type": "boolean", "default": false },
+    "unmarkedLabel": { "not": { "pattern": "^\\[ÖRNEK\\]" } },
+    "labelledContent": {
+      "if": { "properties": { "is_placeholder": { "const": false } } },
+      "then": {
+        "properties": {
+          "name": { "$ref": "#/$defs/unmarkedLabel" },
+          "text": { "$ref": "#/$defs/unmarkedLabel" },
+          "title": { "$ref": "#/$defs/unmarkedLabel" }
+        }
+      }
+    },
+    "status": {
+      "enum": ["draft", "prerelease", "published", "quarantined", "retired"]
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "score_type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "score_type": { "enum": ["P1", "P2", "P3"] }
+      }
+    },
+    "subtest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "short_name",
+        "question_count",
+        "exam_order",
+        "weight_p1"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "short_name": { "$ref": "#/$defs/text" },
+        "question_count": { "type": "integer", "minimum": 1, "maximum": 80 },
+        "exam_order": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "weight_p1": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value"],
+      "properties": { "key": { "$ref": "#/$defs/id" }, "value": true }
+    },
+    "topic": {
+      "$ref": "#/$defs/labelledContent",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "subtest_id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "subtest_id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "exam_weight": { "type": ["number", "null"], "minimum": 0 },
+        "is_placeholder": { "$ref": "#/$defs/placeholder" }
+      }
+    },
+    "topicText": {
+      "$ref": "#/$defs/labelledContent",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "topic_id", "text"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "topic_id": { "$ref": "#/$defs/id" },
+        "text": { "$ref": "#/$defs/text" },
+        "is_placeholder": { "$ref": "#/$defs/placeholder" }
+      }
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "short_name"],
+          "anyOf": [{ "required": ["article"] }, { "required": ["articles"] }],
+          "properties": {
+            "kind": { "const": "law" },
+            "name": { "$ref": "#/$defs/text" },
+            "short_name": { "$ref": "#/$defs/text" },
+            "article": { "$ref": "#/$defs/positiveInt" },
+            "articles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/positiveInt" }
+            },
+            "quote": { "$ref": "#/$defs/text" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "lesson_title"],
+          "properties": {
+            "kind": { "const": "lesson" },
+            "lesson_title": { "$ref": "#/$defs/text" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "title", "section"],
+          "properties": {
+            "kind": { "const": "notes" },
+            "title": { "$ref": "#/$defs/text" },
+            "section": { "$ref": "#/$defs/text" }
+          }
+        }
+      ]
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heading", "text"],
+      "properties": {
+        "heading": { "$ref": "#/$defs/text" },
+        "text": { "$ref": "#/$defs/text" }
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "title", "blocks"],
+      "properties": {
+        "kind": { "enum": ["definition", "example", "confused", "exam"] },
+        "title": { "$ref": "#/$defs/text" },
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/block" }
+        },
+        "tip": { "$ref": "#/$defs/text" }
+      }
+    },
+    "lessonCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "card_position"],
+      "properties": {
+        "question_id": { "$ref": "#/$defs/id" },
+        "card_position": { "type": "integer", "minimum": 1, "maximum": 6 }
+      }
+    },
+    "lesson": {
+      "$ref": "#/$defs/labelledContent",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "topic_id",
+        "title",
+        "minutes",
+        "status",
+        "source",
+        "cards",
+        "check_questions"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "topic_id": { "$ref": "#/$defs/id" },
+        "title": { "$ref": "#/$defs/text" },
+        "minutes": { "type": "integer", "minimum": 3, "maximum": 5 },
+        "status": { "$ref": "#/$defs/status" },
+        "source": { "$ref": "#/$defs/source" },
+        "is_placeholder": { "$ref": "#/$defs/placeholder" },
+        "cards": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 6,
+          "items": { "$ref": "#/$defs/card" }
+        },
+        "check_questions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/lessonCheck" }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "required": ["A", "B", "C", "D", "E"],
+      "maxProperties": 5,
+      "additionalProperties": { "$ref": "#/$defs/text" }
+    },
+    "rationale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "$ref": "#/$defs/text" },
+        "misconception_id": { "$ref": "#/$defs/id" }
+      }
+    },
+    "solutionStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "text"],
+      "properties": {
+        "title": { "$ref": "#/$defs/text" },
+        "text": { "$ref": "#/$defs/text" }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "subtest_id",
+        "topic_id",
+        "objective_id",
+        "difficulty",
+        "status",
+        "is_placeholder",
+        "stem",
+        "options",
+        "correct_option",
+        "rationales",
+        "solution_steps",
+        "source"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "subtest_id": { "$ref": "#/$defs/id" },
+        "topic_id": { "$ref": "#/$defs/id" },
+        "objective_id": { "$ref": "#/$defs/id" },
+        "difficulty": { "enum": [1, 2, 3] },
+        "status": { "$ref": "#/$defs/status" },
+        "is_placeholder": { "$ref": "#/$defs/placeholder" },
+        "stem": { "$ref": "#/$defs/text" },
+        "options": { "$ref": "#/$defs/options" },
+        "correct_option": { "enum": ["A", "B", "C", "D", "E"] },
+        "rationales": {
+          "type": "object",
+          "required": ["A", "B", "C", "D", "E"],
+          "maxProperties": 5,
+          "additionalProperties": { "$ref": "#/$defs/rationale" }
+        },
+        "solution_steps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/solutionStep" }
+        },
+        "source": { "$ref": "#/$defs/source" },
+        "related_lesson_id": {
+          "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "is_placeholder": { "const": true } } },
+          "then": { "properties": { "stem": { "pattern": "^\\[ÖRNEK\\]" } } },
+          "else": {
+            "properties": { "stem": { "not": { "pattern": "^\\[ÖRNEK\\]" } } }
+          }
+        }
+      ]
+    },
+    "mockExam": {
+      "$ref": "#/$defs/labelledContent",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "status", "question_ids"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "$ref": "#/$defs/text" },
+        "status": { "$ref": "#/$defs/status" },
+        "is_placeholder": { "$ref": "#/$defs/placeholder" },
+        "published_at": { "type": ["string", "null"], "format": "date-time" },
+        "question_ids": {
+          "type": "array",
+          "minItems": 80,
+          "maxItems": 80,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        }
+      }
+    }
+  }
+}

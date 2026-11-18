@@ -11,4 +11,9 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "postgresql+psycopg://kursu:kursu_local@127.0.0.1:5432/kursu"
+    app_env: str = "development"
     app_origin: str = "http://localhost:8081"
+
+    @property
+    def production(self) -> bool:
+        return self.app_env.strip().lower() == "production"

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "remote_config": [
+    { "key": "app_name", "value": "Kürsü" },
+    { "key": "exam_date", "value": "2027-05-08" },
+    { "key": "results_date", "value": "2027-06-11" },
+    {
+      "key": "free_limits",
+      "value": {
+        "plan_days": 3,
+        "lessons_per_day": 1,
+        "questions_per_day": 5,
+        "mock_exams": 1
+      }
+    },
+    { "key": "web_price_groups_try", "value": [790, 990, 1290] },
+    { "key": "mock_day", "value": "sunday" },
+    { "key": "review_intervals_days", "value": [1, 3, 7, 14, 30] }
+  ]
+}

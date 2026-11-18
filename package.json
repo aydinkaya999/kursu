@@ -11,6 +11,8 @@
     "dev:api": "uv run --directory services/api uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
     "dev:app": "cd apps/app && node --env-file-if-exists=../../.env --run start --",
     "gen:api": "uv run --directory services/api python -m app.export_client",
+    "import-content": "PYTHONPATH=services/api uv run --project services/api python -m app.cli import-content",
+    "make-placeholders": "PYTHONPATH=services/api uv run --project services/api python -m app.cli make-placeholders",
     "lint": "pnpm --filter @kursu/app lint && prettier --check apps/app packages/api-client package.json pnpm-workspace.yaml docker-compose.yml .github/workflows/ci.yml && uv run --directory services/api ruff check . && uv run --directory services/api ruff format --check .",
     "typecheck": "pnpm -r --if-present run typecheck && uv run --directory services/api mypy",
     "test": "pnpm --filter @kursu/app test && uv run --directory services/api pytest",
