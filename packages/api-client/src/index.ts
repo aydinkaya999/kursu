@@ -7,6 +7,100 @@ const { createClient }: typeof import("fets") = require("fets");
 export type ApiDocument = {
   "components": {
     "schemas": {
+      "Breakdown": {
+        "properties": {
+          "asked": {
+            "title": "Asked",
+            "type": "integer"
+          },
+          "correct": {
+            "title": "Correct",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "boolean"
+          },
+          "subtest_id": {
+            "title": "Subtest Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subtest_id",
+          "name",
+          "correct",
+          "asked",
+          "priority"
+        ],
+        "title": "Breakdown",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "details"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "FocusTopic": {
+        "properties": {
+          "subtest": {
+            "title": "Subtest",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subtest",
+          "topic"
+        ],
+        "title": "FocusTopic",
+        "type": "object"
+      },
+      "GuestRequest": {
+        "properties": {
+          "platform": {
+            "enum": [
+              "web",
+              "native"
+            ],
+            "title": "Platform",
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform"
+        ],
+        "title": "GuestRequest",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -33,6 +127,13 @@ export type ApiDocument = {
         ],
         "title": "Health",
         "type": "object"
+      },
+      "Kind": {
+        "enum": [
+          "full",
+          "short"
+        ],
+        "type": "string"
       },
       "LawSource": {
         "properties": {
@@ -283,6 +384,50 @@ export type ApiDocument = {
         "title": "LessonSummary",
         "type": "object"
       },
+      "Letter": {
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ],
+        "type": "string"
+      },
+      "Me": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_guest": {
+            "title": "Is Guest",
+            "type": "boolean"
+          },
+          "placement": {
+            "$ref": "#/components/schemas/PlacementStatus"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Profile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "is_guest",
+          "profile",
+          "placement"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
       "MockSummary": {
         "properties": {
           "id": {
@@ -370,6 +515,279 @@ export type ApiDocument = {
         "title": "NotesSource",
         "type": "object"
       },
+      "Placement": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UnansweredQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "active",
+              "completed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "subtest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtest"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "position",
+          "total",
+          "subtest",
+          "question"
+        ],
+        "title": "Placement",
+        "type": "object"
+      },
+      "PlacementResult": {
+        "properties": {
+          "exam_questions": {
+            "title": "Exam Questions",
+            "type": "integer"
+          },
+          "first_week": {
+            "$ref": "#/components/schemas/WeekPreview"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "net_high": {
+            "title": "Net High",
+            "type": "integer"
+          },
+          "net_low": {
+            "title": "Net Low",
+            "type": "integer"
+          },
+          "subtests": {
+            "items": {
+              "$ref": "#/components/schemas/Breakdown"
+            },
+            "title": "Subtests",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "total",
+          "exam_questions",
+          "net_low",
+          "net_high",
+          "subtests",
+          "first_week"
+        ],
+        "title": "PlacementResult",
+        "type": "object"
+      },
+      "PlacementStatus": {
+        "properties": {
+          "active_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Id"
+          },
+          "can_retake": {
+            "title": "Can Retake",
+            "type": "boolean"
+          },
+          "latest_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Id"
+          },
+          "next_retake_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Retake On"
+          }
+        },
+        "required": [
+          "active_id",
+          "latest_id",
+          "next_retake_on",
+          "can_retake"
+        ],
+        "title": "PlacementStatus",
+        "type": "object"
+      },
+      "Profile": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "enum": [
+              "first",
+              "repeat"
+            ],
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "daily_minutes": {
+            "enum": [
+              30,
+              60,
+              90
+            ],
+            "title": "Daily Minutes",
+            "type": "integer"
+          },
+          "field_id": {
+            "title": "Field Id",
+            "type": "string"
+          },
+          "score_type": {
+            "$ref": "#/components/schemas/ScoreType"
+          }
+        },
+        "required": [
+          "field_id",
+          "daily_minutes",
+          "attempt_kind",
+          "score_type"
+        ],
+        "title": "Profile",
+        "type": "object"
+      },
+      "ProfileInput": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_kind": {
+            "enum": [
+              "first",
+              "repeat"
+            ],
+            "title": "Attempt Kind",
+            "type": "string"
+          },
+          "daily_minutes": {
+            "enum": [
+              30,
+              60,
+              90
+            ],
+            "title": "Daily Minutes",
+            "type": "integer"
+          },
+          "field_id": {
+            "title": "Field Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field_id",
+          "daily_minutes",
+          "attempt_kind"
+        ],
+        "title": "ProfileInput",
+        "type": "object"
+      },
+      "PublicConfig": {
+        "properties": {
+          "app_name": {
+            "title": "App Name",
+            "type": "string"
+          },
+          "days_to_exam": {
+            "title": "Days To Exam",
+            "type": "integer"
+          },
+          "exam_date": {
+            "format": "date",
+            "title": "Exam Date",
+            "type": "string"
+          },
+          "results_date": {
+            "format": "date",
+            "title": "Results Date",
+            "type": "string"
+          },
+          "seconds_to_midnight": {
+            "title": "Seconds To Midnight",
+            "type": "integer"
+          },
+          "server_now": {
+            "format": "date-time",
+            "title": "Server Now",
+            "type": "string"
+          }
+        },
+        "required": [
+          "app_name",
+          "exam_date",
+          "results_date",
+          "server_now",
+          "days_to_exam",
+          "seconds_to_midnight"
+        ],
+        "title": "PublicConfig",
+        "type": "object"
+      },
       "QuestionOptions": {
         "properties": {
           "A": {
@@ -403,6 +821,42 @@ export type ApiDocument = {
         "title": "QuestionOptions",
         "type": "object"
       },
+      "RefreshRequest": {
+        "properties": {
+          "platform": {
+            "enum": [
+              "web",
+              "native"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "refresh_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
+          }
+        },
+        "required": [
+          "platform"
+        ],
+        "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ScoreType": {
+        "enum": [
+          "P1",
+          "P2",
+          "P3"
+        ],
+        "type": "string"
+      },
       "ServiceUnavailable": {
         "properties": {
           "code": {
@@ -426,6 +880,52 @@ export type ApiDocument = {
           "details"
         ],
         "title": "ServiceUnavailable",
+        "type": "object"
+      },
+      "Start": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind",
+            "default": "full"
+          }
+        },
+        "title": "Start",
+        "type": "object"
+      },
+      "Submission": {
+        "additionalProperties": false,
+        "properties": {
+          "client_answer_id": {
+            "format": "uuid",
+            "title": "Client Answer Id",
+            "type": "string"
+          },
+          "not_sure": {
+            "default": false,
+            "title": "Not Sure",
+            "type": "boolean"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "selected_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Letter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "client_answer_id",
+          "question_id",
+          "selected_option"
+        ],
+        "title": "Submission",
         "type": "object"
       },
       "Subtest": {
@@ -492,6 +992,30 @@ export type ApiDocument = {
           "score_type"
         ],
         "title": "TeachingField",
+        "type": "object"
+      },
+      "Tokens": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "refresh_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Token"
+          }
+        },
+        "required": [
+          "access_token"
+        ],
+        "title": "Tokens",
         "type": "object"
       },
       "Topic": {
@@ -588,6 +1112,47 @@ export type ApiDocument = {
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WeekPreview": {
+        "properties": {
+          "daily_minutes": {
+            "title": "Daily Minutes",
+            "type": "integer"
+          },
+          "mock_day": {
+            "enum": [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday"
+            ],
+            "title": "Mock Day",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/FocusTopic"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "daily_minutes",
+          "topics",
+          "mock_day"
+        ],
+        "title": "WeekPreview",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -597,6 +1162,129 @@ export type ApiDocument = {
   },
   "openapi": "3.1.0",
   "paths": {
+    "/v1/auth/guest": {
+      "post": {
+        "operationId": "createGuest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tokens"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Guest",
+        "tags": [
+          "Guests"
+        ]
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tokens"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "Guests"
+        ]
+      }
+    },
+    "/v1/config": {
+      "get": {
+        "operationId": "getConfig",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConfig"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Config",
+        "tags": [
+          "System"
+        ]
+      }
+    },
     "/v1/fields": {
       "get": {
         "operationId": "listFields",
@@ -755,6 +1443,108 @@ export type ApiDocument = {
         ]
       }
     },
+    "/v1/me": {
+      "get": {
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "Guests"
+        ]
+      }
+    },
+    "/v1/me/profile": {
+      "patch": {
+        "operationId": "saveProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Profile",
+        "tags": [
+          "Guests"
+        ]
+      }
+    },
     "/v1/mocks": {
       "get": {
         "operationId": "listMocks",
@@ -777,6 +1567,354 @@ export type ApiDocument = {
         "summary": "List Mocks",
         "tags": [
           "Catalogue"
+        ]
+      }
+    },
+    "/v1/placement": {
+      "post": {
+        "operationId": "startPlacement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Start"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Placement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start",
+        "tags": [
+          "Placement"
+        ]
+      }
+    },
+    "/v1/placement/{id}/answers": {
+      "post": {
+        "operationId": "answerPlacement",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Submission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Placement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Answer",
+        "tags": [
+          "Placement"
+        ]
+      }
+    },
+    "/v1/placement/{id}/result": {
+      "get": {
+        "operationId": "placementResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlacementResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Result",
+        "tags": [
+          "Placement"
+        ]
+      }
+    },
+    "/v1/plan/first-week": {
+      "get": {
+        "operationId": "firstWeek",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "First Week",
+        "tags": [
+          "Placement"
         ]
       }
     },

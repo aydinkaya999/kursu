@@ -22,9 +22,10 @@ const config: PlaywrightTestConfig = {
   webServer: [
     {
       command:
-        "uv run --directory ../../services/api uvicorn app.main:app --host 127.0.0.1 --port 8100",
+        "PYTHONPATH=. uv run --directory ../../services/api python tests/serve_e2e.py --port 8100",
       url: api + "/v1/health",
       env: { APP_ORIGIN: web },
+      gracefulShutdown: { signal: "SIGTERM", timeout: 10000 },
       timeout: 60000,
     },
     {

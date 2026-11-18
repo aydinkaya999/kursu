@@ -4,6 +4,7 @@ export const space = {
   x2: 2,
   x4: 4,
   x6: 6,
+  x7: 7,
   x8: 8,
   x10: 10,
   x12: 12,
@@ -11,6 +12,7 @@ export const space = {
   x16: 16,
   x18: 18,
   x20: 20,
+  x22: 22,
   x24: 24,
   x32: 32,
 } as const;
@@ -29,6 +31,8 @@ export const radius = {
 export const line = { hair: 1, control: 1.5, selected: 2 } as const;
 export const size = {
   target: 44,
+  checkbox: 20,
+  resultRow: 30,
   action: 52,
   primaryAction: 56,
   compactAction: 46,

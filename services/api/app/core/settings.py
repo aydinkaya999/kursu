@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_ENV = Path(__file__).resolve().parents[4] / ".env"
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "postgresql+psycopg://kursu:kursu_local@127.0.0.1:5432/kursu"
+    jwt_secret: SecretStr = SecretStr("")
     app_env: str = "development"
     app_origin: str = "http://localhost:8081"
 

@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import appConfig from "../../app.json";
 import { tr, type Destination } from "../i18n/tr";
 import { colors, radius, shadow, size, space } from "../theme";
+import { Chip } from "./Indicators";
 import { Action, Label } from "./Core";
 import { Icon, type IconName } from "./Icon";
 
@@ -90,12 +91,18 @@ export function TabBar({ label = tr.nav.menu, ...props }: NavProps) {
     </View>
   );
 }
-export function SideNav({ label = tr.nav.menu, ...props }: NavProps) {
+export function SideNav({
+  label = tr.nav.menu,
+  appName,
+  examLabel,
+  ...props
+}: NavProps & { appName?: string; examLabel?: string }) {
   return (
     <View role="navigation" accessibilityLabel={label} style={styles.sidebar}>
       <Label variant="wordmark" color={colors.primary} style={styles.wordmark}>
-        {appConfig.expo.name}
+        {appName ?? appConfig.expo.name}
       </Label>
+      {examLabel && <Chip tone="butter" label={examLabel} />}
       <View style={styles.links}>
         <NavItems {...props} side />
       </View>

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import {
   colors,
   radius,
@@ -10,16 +10,13 @@ import {
 } from "../theme";
 import { Label } from "./Core";
 import { Icon, type IconName } from "./Icon";
-type BadgeProps = { label: string; tone?: Tone };
+type BadgeProps = { label: string; tone?: Tone; style?: StyleProp<ViewStyle> };
 function Badge({
   label,
   tone,
   small,
-}: {
-  label: string;
-  tone: Tone;
-  small: boolean;
-}) {
+  style,
+}: BadgeProps & { tone: Tone; small: boolean }) {
   const [backgroundColor, color] = tones[tone];
   return (
     <View
@@ -28,6 +25,7 @@ function Badge({
         small ? styles.chip : styles.pill,
         { backgroundColor },
         tone === "surface" && styles.raised,
+        style,
       ]}
     >
       <Label variant={small ? "caption" : "meta"} weight={800} color={color}>
@@ -36,11 +34,11 @@ function Badge({
     </View>
   );
 }
-export const Pill = ({ label, tone = "primary" }: BadgeProps) => (
-  <Badge label={label} tone={tone} small={false} />
+export const Pill = ({ tone = "primary", ...props }: BadgeProps) => (
+  <Badge {...props} tone={tone} small={false} />
 );
-export const Chip = ({ label, tone = "surface" }: BadgeProps) => (
-  <Badge label={label} tone={tone} small />
+export const Chip = ({ tone = "surface", ...props }: BadgeProps) => (
+  <Badge {...props} tone={tone} small />
 );
 const tiles = {
   small: [size.tileSmall, radius.small, 16],

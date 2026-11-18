@@ -1,4 +1,5 @@
 import asyncio
+import secrets
 from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
@@ -34,6 +35,7 @@ def catalogue_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
         isolated = url.update_query_dict({"options": f"-csearch_path={schema}"})
         monkeypatch.setenv("DATABASE_URL", isolated.render_as_string(hide_password=False))
         monkeypatch.setenv("APP_ENV", "development")
+        monkeypatch.setenv("JWT_SECRET", secrets.token_urlsafe(48))
         command.upgrade(
             Config(str(Path(__file__).resolve().parents[1] / "alembic.ini")), "head"
         )

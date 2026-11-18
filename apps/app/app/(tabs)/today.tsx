@@ -4,12 +4,15 @@ import HealthPanel from "../../src/features/health/HealthPanel";
 import { tr } from "../../src/i18n/tr";
 import { colors } from "../../src/theme";
 
+import { TodayPlacement } from "../../src/features/placement/TodayPlacement";
+
 export default function Today() {
   return (
     <Screen inShell>
       <Label accessibilityRole="header" variant="h1">
         {tr.nav.today}
       </Label>
+      <TodayPlacement />
       <HealthPanel />
       {__DEV__ && (
         <Link href="/gallery" asChild>

@@ -1,0 +1,60 @@
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Table,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+
+from app.core.db import Base
+
+attempts = Table(
+    "placement_attempts",
+    Base.metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("user_id", Uuid, ForeignKey("users.id"), nullable=False, index=True),
+    Column("kind", Text, nullable=False),
+    Column("state", Text, nullable=False),
+    Column("position", Integer, nullable=False),
+    Column("levels", JSONB, nullable=False),
+    Column("current_question_id", Text, ForeignKey("questions.id")),
+    Column("started_at", DateTime(timezone=True), nullable=False),
+    Column("completed_at", DateTime(timezone=True)),
+    Column("result", JSONB(none_as_null=True)),
+    CheckConstraint("kind IN ('full','short')", name="ck_placement_kind"),
+    CheckConstraint("state IN ('active','completed')", name="ck_placement_state"),
+    Index(
+        "uq_active_placement_user",
+        "user_id",
+        unique=True,
+        postgresql_where=text("state = 'active'"),
+    ),
+)
+answers = Table(
+    "answers",
+    Base.metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("user_id", Uuid, ForeignKey("users.id"), nullable=False, index=True),
+    Column("placement_id", Uuid, ForeignKey("placement_attempts.id"), nullable=False),
+    Column("position", Integer, nullable=False),
+    Column("question_id", Text, ForeignKey("questions.id"), nullable=False),
+    Column("subtest_id", Text, ForeignKey("subtests.id"), nullable=False),
+    Column("topic_id", Text, ForeignKey("topics.id"), nullable=False),
+    Column("selected_option", Text),
+    Column("is_correct", Boolean),
+    Column("not_sure", Boolean, nullable=False),
+    Column("client_answer_id", Uuid, nullable=False),
+    Column("answered_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("user_id", "client_answer_id"),
+    UniqueConstraint("placement_id", "position"),
+    UniqueConstraint("placement_id", "question_id"),
+    CheckConstraint("selected_option IN ('A','B','C','D','E')", name="ck_answer_option"),
+)

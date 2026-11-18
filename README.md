@@ -1,6 +1,6 @@
 # Kürsü
 
-Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. The Today route displays **Sunucuya bağlanıldı.** after the API successfully queries PostgreSQL.
+Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. A guest can choose a teaching field, take the adaptive AGS placement test and see their estimated net range and first-week study plan.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ Use Node 22.13+ on the Node 22 LTS line, pnpm 11.6.0, uv, and Docker with Compos
 pnpm setup
 ```
 
-Setup creates a local `.env` from `.env.example` when needed and installs the versions recorded in `pnpm-lock.yaml` and `services/api/uv.lock`. It waits for PostgreSQL, applies the migrations, imports the seed and generates the development question bank. It also generates the API client and installs Playwright Chromium. You can repeat setup against the same database. On a minimal Linux machine, Chromium may also need system libraries installed with `pnpm --filter @kursu/app exec playwright install-deps chromium`.
+Setup creates a local `.env` from `.env.example` when needed, initializes a random JWT signing key for development and installs the versions recorded in `pnpm-lock.yaml` and `services/api/uv.lock`. It waits for PostgreSQL, applies the migrations, imports the seed and generates the development question bank. It also generates the API client and installs Playwright Chromium. You can repeat setup against the same database. On a minimal Linux machine, Chromium may also need system libraries installed with `pnpm --filter @kursu/app exec playwright install-deps chromium`.
 
 Start the servers in separate terminals from the repository root.
 
@@ -34,7 +34,11 @@ Press **w** for web, **i** for the iOS Simulator on macOS, or **a** for an Andro
 
 ## App shell and component gallery
 
-The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Until their feature milestones, the routes display their titles and Today retains the live health check.
+Open `/` to start. A new guest chooses a teaching field, daily study time and first or repeat attempt. **Seviye testine başla** opens the untimed 30-question test. **Önce uygulamayı gez** saves the profile and opens Today. Each answer is saved on the server. Returning to Today on the same browser or installation offers the next unanswered question. The result shows a net range, the six subtests ordered by accuracy and a first-week preview. A ten-question retake opens 14 Istanbul calendar days after completion. The result also links to the account entry screen. Guest continuation works there, and account creation is scheduled for M4.
+
+The API renews guest sessions using an HttpOnly cookie on web and secure OS storage on mobile. Serve the web app and API over HTTPS on the same site in production, configure the web origin in `APP_ORIGIN` and supply a stable private `JWT_SECRET` of at least 32 bytes. Use the same hostname for both servers in local web development. The countdown and retake availability come from the server.
+
+The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Today includes the live health check and the candidate’s placement actions.
 
 In development, select **Bileşen galerisi** on Today on any platform, or open `http://localhost:8081/gallery` on web. Try the selection controls, question map and navigation previews there. The pinned **Bugüne dön** button returns to Today. The sample state lasts for the current gallery visit. The app bundles the five Plus Jakarta Sans weights locally and renders the reference icons with SVG. Production builds protect the gallery route. A static web host should serve `index.html` for application routes so deep links can enter the shell.
 
@@ -52,7 +56,7 @@ In development, select **Bileşen galerisi** on Today on any platform, or open `
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, the API on 8100 and the development gallery on 4181. Verify health, deep links, responsive navigation, gallery interactions and reference styles. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers the complete guest placement flow, reference styles, health, navigation and gallery interactions at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
@@ -66,10 +70,10 @@ Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It 
 
 ## Repository
 
-- `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles the health request and retry.
+- `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles server state and the placement screens are in `src/features/placement/`.
 - `services/api/app/` contains the FastAPI app, settings and async SQLAlchemy session factory. Psycopg connects to PostgreSQL. The live contract is at `/v1/openapi.json` and API documentation is at `/v1/docs`.
 - `services/api/alembic/` contains the database migrations. The content module stores reference data, question feedback, sources, lesson cards and mock positions. The API tests exercise the migrations and imports in isolated PostgreSQL schemas.
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md)

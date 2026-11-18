@@ -2,16 +2,14 @@ import { expect, test } from "@playwright/test";
 
 import { tr } from "../src/i18n/tr";
 
-test("opening the app displays the live API health result", async ({
-  page,
-}) => {
+test("Today displays the live API health result", async ({ page }) => {
   const [response] = await Promise.all([
     page.waitForResponse(
       (reply) =>
         new URL(reply.url()).pathname === "/v1/health" &&
         reply.request().method() === "GET",
     ),
-    page.goto("/"),
+    page.goto("/today"),
   ]);
 
   expect(response.status()).toBe(200);

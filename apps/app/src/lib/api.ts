@@ -1,6 +1,6 @@
 import { createApiClient } from "@kursu/api-client";
 
-const client = createApiClient(
+export const client = createApiClient(
   process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000",
 );
 

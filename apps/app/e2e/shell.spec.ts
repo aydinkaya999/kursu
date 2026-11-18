@@ -73,8 +73,10 @@ test("release builds keep the gallery out of links and direct routes", async ({
 }) => {
   const response = await page.goto("/gallery");
   expect(response?.ok()).toBe(true);
-  await expect(page).toHaveURL(/\/today$/);
-  await expect(page.getByRole("heading", { name: tr.nav.today })).toBeVisible();
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(
+    page.getByRole("heading", { name: tr.onboarding.title }),
+  ).toBeVisible();
   await expect(page.getByText(tr.gallery.title, { exact: true })).toHaveCount(
     0,
   );

@@ -2,7 +2,9 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 
 from app.core.settings import Settings
+from app.modules.accounts import models as accounts  # noqa: F401 (register tables)
 from app.modules.content.models import metadata
+from app.modules.placement import models as placement  # noqa: F401 (register tables)
 
 database_url = Settings().database_url
 

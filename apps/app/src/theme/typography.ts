@@ -18,6 +18,10 @@ function type(
   return { fontSize, lineHeight, weight, letterSpacing };
 }
 export const typography = {
+  resultNet: type(44, 48, 800, -0.88),
+  resultNote: type(12, 17, 400),
+  planTopic: type(13.5, 20, 400),
+  onboardingWordmark: type(24, 30, 800, -0.48),
   display: type(42, 48, 800, -0.84),
   h1: type(26, 32, 800, -0.26),
   intro: type(28, 34, 800, -0.28),

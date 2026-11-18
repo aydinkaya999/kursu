@@ -92,10 +92,14 @@ export function Screen({
   children,
   footer,
   inShell = false,
+  contentStyle,
+  footerStyle,
 }: {
   children: ReactNode;
   footer?: ReactNode;
   inShell?: boolean;
+  contentStyle?: StyleProp<ViewStyle>;
+  footerStyle?: StyleProp<ViewStyle>;
 }) {
   return (
     <SafeAreaView
@@ -107,9 +111,13 @@ export function Screen({
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.column}>{children}</View>
+        <View style={[styles.column, contentStyle]}>{children}</View>
       </ScrollView>
-      {footer && <View style={[styles.column, styles.footer]}>{footer}</View>}
+      {footer && (
+        <View style={[styles.column, styles.footer, footerStyle]}>
+          {footer}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -122,8 +130,14 @@ export function Card({
 }) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
-export function PrimaryCard({ children }: { children: ReactNode }) {
-  return <View style={styles.primaryCard}>{children}</View>;
+export function PrimaryCard({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return <View style={[styles.primaryCard, style]}>{children}</View>;
 }
 type ButtonVariant = "primary" | "secondary" | "text" | "quiet";
 export function Button({
@@ -132,12 +146,16 @@ export function Button({
   variant = "primary",
   disabled = false,
   compact = false,
+  underline = false,
+  style,
 }: {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
   compact?: boolean;
+  underline?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) {
   const textRole: TextRole =
     compact || variant === "secondary"
@@ -152,7 +170,12 @@ export function Button({
       accessibilityLabel={label}
       onPress={onPress}
       disabled={disabled}
-      style={[styles.button, buttonStyles[variant], compact && styles.compact]}
+      style={[
+        styles.button,
+        buttonStyles[variant],
+        compact && styles.compact,
+        style,
+      ]}
     >
       <Label
         variant={textRole}
@@ -166,7 +189,10 @@ export function Button({
                 ? colors.primary
                 : colors.primaryStrong
         }
-        style={[styles.centerText, variant === "quiet" && styles.underline]}
+        style={[
+          styles.centerText,
+          (underline || variant === "quiet") && styles.underline,
+        ]}
       >
         {label}
       </Label>

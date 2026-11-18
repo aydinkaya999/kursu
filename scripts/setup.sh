@@ -7,6 +7,7 @@ fi
 
 pnpm install --frozen-lockfile
 uv sync --locked --directory services/api
+uv run --project services/api python scripts/setup-env.py
 docker compose up --detach --wait postgres
 uv run --directory services/api alembic upgrade head
 pnpm import-content content/seed/config.json content/seed/sample-content.json

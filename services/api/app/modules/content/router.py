@@ -1,12 +1,8 @@
-from collections.abc import AsyncIterator
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import Database
+from app.core.http import Session
 from app.modules.content import models as db
 from app.modules.content.schemas import (
     LessonDetail,
@@ -25,15 +21,6 @@ from app.modules.content.service import (
 )
 
 router = APIRouter(tags=["Catalogue"])
-
-
-async def session_for_request(request: Request) -> AsyncIterator[AsyncSession]:
-    database: Database = request.app.state.database
-    async with database.sessions() as session:
-        yield session
-
-
-Session = Annotated[AsyncSession, Depends(session_for_request)]
 
 
 @router.get("/fields", operation_id="listFields")
