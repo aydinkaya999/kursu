@@ -15,8 +15,9 @@ A candidate can attach an email, Google or Apple identity to their guest, recove
 
 - ASSUMPTION: When both profiles exist the established account's preferences win. Keep both placement histories. If both have unfinished attempts, keep the account attempt active and retain the guest attempt as paused so it can resume afterwards.
 - ASSUMPTION: Notification time is unset until chosen. Account deletion asks for confirmation. Legal pages display clearly marked slots until counsel provides the texts.
+- ASSUMPTION: Allow an email code resend after one minute. Successful sign-in opens Today until the paywall milestone.
 - Use development email logging and production SMTP behind the same sender. Use configured Google and Apple credentials with signed ID tokens, an expiring nonce and a browser handoff bound to the initiating guest. Provider test credentials stay in the test process.
-- Account providers and legal content require operator setup before public release. Account success opens Today until the paywall milestone.
+- Account providers and legal content require operator setup before public release.
 
 ## Validation
 
@@ -25,3 +26,5 @@ Exercise all three sign-up methods with a completed placement, merge into an exi
 ## Outcomes
 
 The email, Google and Apple API journeys each retained a completed 30-question placement, merged a second guest, rotated credentials, logged out one device and deleted the account. Negative cases cover expiration, attempt limits, signature claims and challenge ownership. Browser signup, preferences, legal slots and deletion passed at both widths. The local checks passed with 49 Jest and 28 pytest cases. Real provider registration, SMTP credentials and counsel-supplied text are deployment inputs. See the Accounts and settings section in README.md.
+
+Expo WebBrowser handles the operating system's authentication session. PyJWT's cryptography support verifies provider signatures and email-validator validates the address fields. The joint checks and migration round-trip are recorded in the M5 plan.

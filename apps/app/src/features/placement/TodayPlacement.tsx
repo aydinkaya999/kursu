@@ -5,7 +5,15 @@ import { tr } from "../../i18n/tr";
 import { formatDate } from "../../lib/format";
 import { useConfig, useMe } from "./queries";
 import { Status } from "./Status";
-export function TodayPlacement() {
+export function TodayPlacement({
+  showCountdown = true,
+  heading,
+  compact = false,
+}: {
+  showCountdown?: boolean;
+  heading?: string;
+  compact?: boolean;
+}) {
   const config = useConfig(),
     me = useMe(),
     refresh = me.refetch;
@@ -20,7 +28,12 @@ export function TodayPlacement() {
   const info = me.data?.placement;
   return (
     <Card>
-      {config.data && (
+      {heading && (
+        <Label variant="meta" weight={700}>
+          {heading}
+        </Label>
+      )}
+      {showCountdown && config.data && (
         <Label variant="meta">
           {tr.onboarding.countdown(config.data.days_to_exam)}
         </Label>
@@ -37,6 +50,7 @@ export function TodayPlacement() {
         <>
           {(!info?.latest_id || info.active_id) && (
             <Button
+              variant={compact ? "secondary" : "primary"}
               label={info?.active_id ? tr.draft.resume : tr.onboarding.start}
               onPress={() =>
                 router.push(me.data.profile ? "/placement" : "/onboarding")

@@ -29,6 +29,7 @@ from app.modules.accounts.schemas import (
     Tokens,
 )
 from app.modules.accounts.security import COOKIE, CurrentUser, issue, signing_key
+from app.modules.plan.service import recompute_existing
 
 router = APIRouter(
     tags=["Accounts"],
@@ -150,7 +151,9 @@ async def get_settings(user: CurrentUser, db: Session) -> Preferences:
 
 
 @router.patch("/me/settings", operation_id="saveSettings")
-async def save_settings(data: Preferences, user: CurrentUser, db: Session) -> Preferences:
+async def save_settings(
+    data: Preferences, user: CurrentUser, db: Session, now: ServerTime
+) -> Preferences:
     await db.execute(select(users.c.id).where(users.c.id == user).with_for_update())
     if not await db.scalar(
         update(profiles)
@@ -159,6 +162,7 @@ async def save_settings(data: Preferences, user: CurrentUser, db: Session) -> Pr
         .returning(profiles.c.user_id)
     ):
         raise ApiError(409, "conflict", "Complete onboarding first")
+    await recompute_existing(db, user, now)
     await db.commit()
     return data
 

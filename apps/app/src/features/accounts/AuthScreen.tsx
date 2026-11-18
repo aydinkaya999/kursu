@@ -132,6 +132,7 @@ export default function AuthScreen() {
           <>
             <Input
               label={t.emailAddress}
+              testID="account-email"
               value={email}
               onChangeText={setEmail}
               autoComplete="email"
@@ -148,6 +149,7 @@ export default function AuthScreen() {
             <Label>{email}</Label>
             <Input
               label={t.code}
+              testID="account-code"
               keyboardType="number-pad"
               autoComplete="one-time-code"
               maxLength={6}

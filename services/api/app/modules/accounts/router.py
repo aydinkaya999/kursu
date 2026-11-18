@@ -22,7 +22,8 @@ from app.modules.accounts.security import (
     unauthorized,
 )
 from app.modules.content.models import fields
-from app.modules.placement.service import placement_status
+from app.modules.placement.service import lock_user, placement_status
+from app.modules.plan.service import recompute_existing
 
 router = APIRouter(
     tags=["Guests"], responses={401: {"model": ErrorBody}, 422: {"model": ErrorBody}}
@@ -102,7 +103,10 @@ async def me(user: CurrentUser, session: Session, now: ServerTime) -> Me:
 
 
 @router.patch("/me/profile", operation_id="saveProfile")
-async def save_profile(data: ProfileInput, user: CurrentUser, session: Session) -> Profile:
+async def save_profile(
+    data: ProfileInput, user: CurrentUser, session: Session, now: ServerTime
+) -> Profile:
+    await lock_user(session, user)
     score = await session.scalar(
         select(fields.c.score_type).where(fields.c.id == data.field_id)
     )
@@ -115,5 +119,6 @@ async def save_profile(data: ProfileInput, user: CurrentUser, session: Session) 
         .values(user_id=user, **values)
         .on_conflict_do_update(index_elements=[profiles.c.user_id], set_=values)
     )
+    await recompute_existing(session, user, now)
     await session.commit()
     return profile

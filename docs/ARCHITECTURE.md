@@ -72,7 +72,7 @@ Primary keys are UUIDs unless noted. Content rows use stable string ids (slugs) 
 | Auth | `POST /v1/auth/guest` · `POST /v1/auth/email/start` · `POST /v1/auth/email/verify` · `POST /v1/auth/google` · `POST /v1/auth/apple` · `POST /v1/auth/refresh` · `POST /v1/auth/logout` · `DELETE /v1/me` |
 | Profile | `GET /v1/me` · `PATCH /v1/me/profile` · `GET /v1/fields` |
 | Placement | `POST /v1/placement` (start or resume; returns the next question) · `POST /v1/placement/{id}/answers` · `GET /v1/placement/{id}/result` |
-| Plan | `GET /v1/plan/today` · `GET /v1/plan/first-week` · `POST /v1/plan/tasks/{id}/start` |
+| Plan | `GET /v1/plan/today` · `GET /v1/plan/first-week` · `GET /v1/plan/tasks/{id}` · `POST /v1/plan/tasks/{id}/start` · `POST /v1/plan/tasks/{id}/complete` |
 | Catalogue | `GET /v1/subtests` · `GET /v1/topics` · `GET /v1/lessons` · `GET /v1/lessons/{id}` · `POST /v1/lessons/{id}/complete` |
 | Practice | `POST /v1/practice-sessions` · `GET /v1/practice-sessions/{id}` · `POST /v1/practice-sessions/{id}/answers` (returns the feedback) · `POST /v1/practice-sessions/{id}/finish` |
 | Notebook | `GET /v1/notebook?group_by=topic\|misconception` · `GET /v1/notebook/summary` |
@@ -89,8 +89,9 @@ Question payloads sent before an answer contain the stem and options only. The c
 - First launch calls `POST /v1/auth/guest`. A guest is a real user row with `is_guest = true`.
 - Sign-up attaches an identity to the same user row and clears `is_guest` (ONB-6). If the identity already belongs to another account, the guest's study data is merged into that account once, then the guest row is deleted.
 - Email uses a 6-digit one-time code: valid 10 minutes, 5 attempts. Sending goes through an `EmailSender` interface; the development implementation logs the code.
-- Google and Apple: the client obtains an ID token; the server verifies it and issues a session.
+- Google and Apple use an expiring nonce bound to the guest. The system browser returns an authorization code to a registered HTTPS callback. The API exchanges the code, verifies the signed ID token and its issuer, audience and nonce, then returns the browser to the app. A client with its own provider ID token can submit it against the same challenge. Both paths issue a Kürsü session.
 - Access token: JWT, 15 minutes, sent as `Authorization: Bearer`. Refresh token: opaque, 30 days, rotated on use, stored hashed.
+- Logout revokes the current session family. Deletion removes identities, credentials and study history. Daily minutes and the optional Istanbul notification time are read and written through `/v1/me/settings`.
 - Native keeps the refresh token in secure storage. Web receives it as an `HttpOnly`, `Secure`, `SameSite=Lax` cookie and keeps the access token in memory only. CORS allows the app origin with credentials.
 - `DELETE /v1/me` deletes the account and its personal data.
 

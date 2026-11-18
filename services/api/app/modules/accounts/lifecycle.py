@@ -13,9 +13,14 @@ from app.modules.accounts.models import (
     users,
 )
 from app.modules.placement.models import answers, attempts
+from app.modules.plan.merge import merge_plans
 
 
 async def erase(db: AsyncSession, user: UUID) -> None:
+    addresses = select(identities.c.subject).where(
+        identities.c.user_id == user, identities.c.provider == "email"
+    )
+    await db.execute(delete(email_codes).where(email_codes.c.email.in_(addresses)))
     await db.execute(delete(answers).where(answers.c.user_id == user))
     await db.execute(delete(attempts).where(attempts.c.user_id == user))
     await db.execute(delete(profiles).where(profiles.c.user_id == user))
@@ -50,6 +55,7 @@ async def merge(db: AsyncSession, source: UUID, target: UUID) -> None:
     await db.execute(
         update(answers).where(answers.c.user_id == source).values(user_id=target)
     )
+    await merge_plans(db, source, target)
     await erase(db, source)
 
 

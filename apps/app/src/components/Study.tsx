@@ -13,6 +13,7 @@ type TaskProps = {
   tone: Tone;
   state: "pending" | "next" | "done";
   onPress: () => void;
+  wide?: boolean;
 };
 export function TaskRow({
   title,
@@ -22,6 +23,7 @@ export function TaskRow({
   tone,
   state,
   onPress,
+  wide = false,
 }: TaskProps) {
   const next = state === "next",
     done = state === "done";
@@ -48,8 +50,14 @@ export function TaskRow({
   );
   if (next)
     return (
-      <View style={[styles.task, styles.next]}>
-        {contents}
+      <View style={[styles.task, styles.next, wide && styles.nextWide]}>
+        <Action
+          accessibilityLabel={title}
+          onPress={onPress}
+          style={wide && styles.wideTask}
+        >
+          {contents}
+        </Action>
         <Button label={tr.controls.start} compact onPress={onPress} />
       </View>
     );
@@ -209,6 +217,12 @@ const styles = StyleSheet.create({
     borderWidth: line.selected,
     borderColor: colors.primary,
   },
+  nextWide: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  wideTask: { flex: 1 },
   row: { flexDirection: "row", alignItems: "center", gap: space.x12 },
   description: { flex: 1, minWidth: 0, gap: space.x2 },
   list: {

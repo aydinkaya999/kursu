@@ -18,6 +18,9 @@ function type(
   return { fontSize, lineHeight, weight, letterSpacing };
 }
 export const typography = {
+  todayWide: type(32, 40, 800, -0.32),
+  dayCount: type(17, 22, 800),
+  dayPercent: type(22, 26, 800),
   resultNet: type(44, 48, 800, -0.88),
   resultNote: type(12, 17, 400),
   planTopic: type(13.5, 20, 400),

@@ -1,6 +1,33 @@
 import emailMessage from "./email.json";
 export const tr = {
   emailMessage,
+  today: {
+    title: (n: number) => "Bugün " + n + " görevin var",
+    summary: (n: number, done: string) => n + " görevden " + done + " tamam",
+    remaining: (duration: string) => "Kalan süre " + duration,
+    started: (duration: string) => "Güzel başladın. Kalan süre " + duration,
+    allDone: "Bugünkü program tamam",
+    progress: "Günün ilerlemesi",
+    streak: (n: number) => n + " günlük seri",
+    weekly: (goal: number, done: string) =>
+      "Haftalık hedef: " + goal + " günün " + done,
+    streakLabel: "Seri ve haftalık hedef",
+    review: (n: number) => n + " tekrar sorusu",
+    reviewMeta: "Yanlış defterinden",
+    lesson: (sub: string) => "Mikro ders · " + sub,
+    test: (sub: string, n: number) =>
+      "Konu testi · " + sub + " · " + n + " soru",
+    mock: (n: number) => "Deneme · " + n + " soru",
+    net: "Tahmini AGS neti",
+    delta: (n: string) => "Son 4 haftada " + n + " net",
+    priorities: "Bu hafta öncelikli",
+    earlier: "Süre değişmeden tamamlananlar",
+    empty: "Bugün için planlanmış görev yok.",
+    finish: "Görevi tamamla",
+    finished: "Görev tamamlandı",
+    details: "Görev ayrıntıları",
+    nextTask: "Sonraki görev",
+  },
   account: {
     title: "Hesap oluştur",
     intro: "İlerlemen hesabına taşınır.",
@@ -21,6 +48,8 @@ export const tr = {
     disclosure: "Sorular yapay zekâyla üretilir ve otomatik denetlenir.",
     privacy: "Gizlilik",
     terms: "Kullanım koşulları",
+    consent: "Açık rıza metni",
+    refund: "İade koşulları",
     logout: "Çıkış yap",
     remove: "Hesabı sil",
     confirm: "Hesabın ve çalışma verilerin kalıcı olarak silinecek.",

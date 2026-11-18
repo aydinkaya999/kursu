@@ -22,6 +22,7 @@ from app.modules.accounts.models import (
 )
 from app.modules.accounts.providers import IdentityProvider, Provider, provider_client
 from app.modules.placement.models import answers, attempts
+from app.modules.plan.models import plans, streaks, tasks
 
 
 class Inbox:
@@ -166,9 +167,11 @@ def test_onb_5_onb_6_signup_merge_delete_and_refresh(
         and before["profile"] == me["profile"]
     )
     assert client.get("/v1/me", headers=guest).status_code == 401
-    assert (
-        client.get(f"/v1/placement/{first}/result", headers=account).json()["total"] == 30
-    )
+    result = client.get(f"/v1/placement/{first}/result", headers=account).json()
+    assert result["total"] == 30
+    day = client.get("/v1/plan/today", headers=account).json()
+    assert day["net_range"] == {"low": result["net_low"], "high": result["net_high"]}
+    assert len(day["priorities"]) == 3 and day["net_change"] is None
     second, attempt = new_guest(client)
     second_id = client.get("/v1/me", headers=second).json()["id"]
     tokens2 = login(auth_app, second, method)
@@ -300,3 +303,44 @@ def test_two_unfinished_attempts_survive_merge(auth_app: Harness, engine: Engine
         )
     resumed = client.post("/v1/placement", headers=auth, json={}).json()
     assert resumed["id"] == b and resumed["position"] == 2
+
+
+def test_daily_history_merge_preserves_completed_days_without_duplicate_tasks(
+    auth_app: Harness, engine: Engine
+) -> None:
+    client, _, _ = auth_app
+    guest, _ = new_guest(client)
+    # Keep the real-clock account journey within a study season on future CI runs.
+    from app.core.http import ISTANBUL
+    from app.modules.content.models import remote_config
+
+    with engine.begin() as db:
+        db.execute(
+            update(remote_config)
+            .where(remote_config.c.key == "exam_date")
+            .values(value=(datetime.now(ISTANBUL).date() + timedelta(days=100)).isoformat())
+        )
+    first = client.get("/v1/plan/today", headers=guest).json()
+    for task in first["tasks"]:
+        for action in ("start", "complete"):
+            client.post(
+                f"/v1/plan/tasks/{task['id']}/{action}", headers=guest
+            ).raise_for_status()
+    account = headers(login(auth_app, guest, "email"))
+    assert client.get("/v1/plan/today", headers=account).json()["streak"] == 1
+    fresh, _ = new_guest(client)
+    second = client.get("/v1/plan/today", headers=fresh).json()
+    url = f"/v1/plan/tasks/{second['tasks'][0]['id']}"
+    client.post(url + "/start", headers=fresh).raise_for_status()
+    client.post(url + "/complete", headers=fresh).raise_for_status()
+    merged = headers(login(auth_app, fresh, "email"))
+    day = client.get("/v1/plan/today", headers=merged).json()
+    assert day["done"] == day["total"] == first["total"] and day["streak"] == 1
+    assert [t["id"] for t in day["tasks"]] == [t["id"] for t in first["tasks"]]
+    with engine.connect() as db:
+        assert db.scalar(select(func.count()).select_from(plans)) == 1
+        assert db.scalar(select(func.count()).select_from(tasks)) == first["total"]
+    client.delete("/v1/me", headers=merged).raise_for_status()
+    with engine.connect() as db:
+        for table in (plans, tasks, streaks):
+            assert db.scalar(select(func.count()).select_from(table)) == 0

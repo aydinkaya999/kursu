@@ -38,7 +38,7 @@ Open `/` to start. A new guest chooses a teaching field, daily study time and fi
 
 The API renews guest sessions using an HttpOnly cookie on web and secure OS storage on mobile. Serve the web app and API over HTTPS on the same site in production, configure the web origin in `APP_ORIGIN` and supply a stable private `JWT_SECRET` of at least 32 bytes. Use the same hostname for both servers in local web development. The countdown and retake availability come from the server.
 
-The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Today includes the live health check and the candidate’s placement actions.
+The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Today opens the candidate’s plan, placement actions and Settings. In development, Today also shows the live API health check.
 
 In development, select **Bileşen galerisi** on Today on any platform, or open `http://localhost:8081/gallery` on web. Try the selection controls, question map and navigation previews there. The pinned **Bugüne dön** button returns to Today. The sample state lasts for the current gallery visit. The app bundles the five Plus Jakarta Sans weights locally and renders the reference icons with SVG. Production builds protect the gallery route. A static web host should serve `index.html` for application routes so deep links can enter the shell.
 
@@ -48,7 +48,15 @@ In local development, **E-posta ile devam et** sends the six-digit code to the A
 
 For Google, configure the web client ID first in `GOOGLE_CLIENT_IDS` and set `GOOGLE_CLIENT_SECRET`. For Apple, put the Services ID first in `APPLE_AUDIENCES` and supply its signed, unexpired `APPLE_CLIENT_SECRET`. Set `API_PUBLIC_ORIGIN` to the external HTTPS API origin. Register its `/v1/auth/callback/google` and `/v1/auth/callback/apple` paths with their respective providers. The system browser uses the same registered HTTPS callback on all platforms. Native releases return through the registered `kursu://auth` app scheme. Test that return on a development or release build with the app scheme installed. Only the API holds provider secrets. [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect) · [Sign in with Apple](https://developer.apple.com/documentation/signinwithapplerestapi)
 
-Settings supports daily minutes, an optional Istanbul notification time, the AI-content disclosure, legal-text slots, logout on the current device and confirmed account deletion. The privacy and terms texts await counsel.
+Settings supports daily minutes, an optional Istanbul notification time, the AI-content disclosure, legal-text slots, logout on the current device and confirmed account deletion. The privacy, consent, terms and refund texts await counsel.
+
+## Daily study plan
+
+Today opens a personal plan on the first visit of each Istanbul day. The server schedules due reviews, up to two five-minute lessons and a 10–15 question topic test within the selected budget. The configured mock day has one 110-minute exam. In the final 30 days, study days use due reviews and previously opened topics. Changing the daily minutes in Settings rebuilds the current plan and preserves completed work. An unfinished assignment from an earlier day can occupy a later study slot within that day's budget.
+
+Open a row or choose **Başla** to see the assignment. Lesson tasks include the published lesson cards. **Görevi tamamla** records completion and updates Today, the current streak and the weekly goal. Activity-specific scored sessions are scheduled for M6–M8. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. The scheduling inputs at this milestone come from placement responses and completed plan tasks.
+
+For the API, use `GET /v1/plan/today`, `GET /v1/plan/tasks/{id}` and the task's `POST /start` and `POST /complete` operations. The server owns all dates, task estimates, state transitions, progress and streaks. Browser tests run against isolated schemas and a local test mailbox. The API's development email log and test mailbox require no mail service.
 
 ## Commands
 
@@ -64,7 +72,7 @@ Settings supports daily minutes, an optional Istanbul notification time, the AI-
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers the complete guest placement flow, reference styles, health, navigation and gallery interactions at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers guest placement, email registration, settings, account deletion, daily planning, streaks, reference styles and navigation at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
@@ -84,4 +92,4 @@ Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It 
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md)

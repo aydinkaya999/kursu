@@ -5,6 +5,7 @@ import asyncio
 import os
 import secrets
 import signal
+from datetime import date, timedelta
 from pathlib import Path
 from types import FrameType
 from uuid import uuid4
@@ -17,6 +18,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.schema import CreateSchema, DropSchema
 
 from app.cli import import_documents
+from app.core.http import ISTANBUL, server_now
 from app.core.settings import Settings
 from app.modules.content.bundle import SAMPLE_FILE, read_document
 from app.modules.content.placeholders import make_placeholders
@@ -48,11 +50,23 @@ def main() -> None:
             Config(str(Path(__file__).resolve().parents[1] / "alembic.ini")), "head"
         )
         sample = read_document(SAMPLE_FILE)
+        config = read_document(SAMPLE_FILE.with_name("config.json"))
+        # Keep these UI journeys in a study season even when the example exam is past.
+        day = server_now().astimezone(ISTANBUL).date()
+        for item in config["remote_config"]:
+            if item["key"] == "exam_date" and date.fromisoformat(
+                item["value"]
+            ) <= day + timedelta(days=30):
+                item["value"] = (day + timedelta(days=90)).isoformat()
+            if item["key"] == "results_date" and date.fromisoformat(
+                item["value"]
+            ) <= day + timedelta(days=90):
+                item["value"] = (day + timedelta(days=124)).isoformat()
         asyncio.run(
             import_documents(
                 Settings(),
                 [
-                    read_document(SAMPLE_FILE.with_name("config.json")),
+                    config,
                     sample,
                     make_placeholders(sample),
                 ],

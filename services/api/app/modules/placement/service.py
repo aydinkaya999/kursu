@@ -64,20 +64,31 @@ def next_level(level: int, correct: bool | None) -> int:
     return max(1, min(3, level + (1 if correct else -1)))
 
 
-def estimate(
+def expected_net(
     exam_counts: Mapping[str, int], correct: Mapping[str, int], answered: Mapping[str, int]
-) -> tuple[int, int]:
+) -> Fraction:
     value = Fraction()
     for subject, count in exam_counts.items():
         p = Fraction(correct.get(subject, 0) + 1, answered.get(subject, 0) + 2)
         value += count * (p - (1 - p) / 4)
+    return value
+
+
+def range_for(value: Fraction, ceiling: int) -> tuple[int, int]:
     spread = max(Fraction(3), value / 10)
-    ceiling = sum(exam_counts.values())
     low, high = (
         max(0, min(ceiling, floor(v + Fraction(1, 2))))
         for v in (value - spread, value + spread)
     )
     return low, high
+
+
+def estimate(
+    exam_counts: Mapping[str, int], correct: Mapping[str, int], answered: Mapping[str, int]
+) -> tuple[int, int]:
+    return range_for(
+        expected_net(exam_counts, correct, answered), sum(exam_counts.values())
+    )
 
 
 async def placement_status(

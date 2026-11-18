@@ -507,6 +507,24 @@ export type ApiDocument = {
         "title": "MockSummary",
         "type": "object"
       },
+      "NetRange": {
+        "properties": {
+          "high": {
+            "title": "High",
+            "type": "integer"
+          },
+          "low": {
+            "title": "Low",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "low",
+          "high"
+        ],
+        "title": "NetRange",
+        "type": "object"
+      },
       "NotFound": {
         "properties": {
           "code": {
@@ -720,6 +738,85 @@ export type ApiDocument = {
         "title": "PlacementStatus",
         "type": "object"
       },
+      "PlanTask": {
+        "properties": {
+          "content_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Id"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_next": {
+            "title": "Is Next",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TaskKind"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "number"
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "started",
+              "done"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "subtest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtest"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "content_id",
+          "title",
+          "subtest",
+          "count",
+          "minutes",
+          "state",
+          "is_next"
+        ],
+        "title": "PlanTask",
+        "type": "object"
+      },
       "Preferences": {
         "properties": {
           "daily_minutes": {
@@ -748,6 +845,24 @@ export type ApiDocument = {
           "daily_minutes"
         ],
         "title": "Preferences",
+        "type": "object"
+      },
+      "Priority": {
+        "properties": {
+          "mastery_percent": {
+            "title": "Mastery Percent",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "mastery_percent"
+        ],
+        "title": "Priority",
         "type": "object"
       },
       "Profile": {
@@ -1105,6 +1220,15 @@ export type ApiDocument = {
         "title": "Subtest",
         "type": "object"
       },
+      "TaskKind": {
+        "enum": [
+          "review",
+          "lesson",
+          "topic_test",
+          "mock"
+        ],
+        "type": "string"
+      },
       "TeachingField": {
         "properties": {
           "id": {
@@ -1131,6 +1255,122 @@ export type ApiDocument = {
           "score_type"
         ],
         "title": "TeachingField",
+        "type": "object"
+      },
+      "Today": {
+        "properties": {
+          "daily_minutes": {
+            "title": "Daily Minutes",
+            "type": "integer"
+          },
+          "day_completed": {
+            "title": "Day Completed",
+            "type": "boolean"
+          },
+          "days_to_exam": {
+            "title": "Days To Exam",
+            "type": "integer"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "earlier_completed": {
+            "items": {
+              "$ref": "#/components/schemas/PlanTask"
+            },
+            "title": "Earlier Completed",
+            "type": "array"
+          },
+          "mock_day": {
+            "title": "Mock Day",
+            "type": "boolean"
+          },
+          "net_change": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Change"
+          },
+          "net_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NetRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "integer"
+          },
+          "plan_date": {
+            "format": "date",
+            "title": "Plan Date",
+            "type": "string"
+          },
+          "priorities": {
+            "items": {
+              "$ref": "#/components/schemas/Priority"
+            },
+            "title": "Priorities",
+            "type": "array"
+          },
+          "remaining_minutes": {
+            "title": "Remaining Minutes",
+            "type": "number"
+          },
+          "streak": {
+            "title": "Streak",
+            "type": "integer"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PlanTask"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "weekly_done": {
+            "title": "Weekly Done",
+            "type": "integer"
+          },
+          "weekly_goal": {
+            "title": "Weekly Goal",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plan_date",
+          "days_to_exam",
+          "daily_minutes",
+          "mock_day",
+          "tasks",
+          "earlier_completed",
+          "total",
+          "done",
+          "percent",
+          "day_completed",
+          "remaining_minutes",
+          "streak",
+          "weekly_done",
+          "weekly_goal",
+          "net_range",
+          "net_change",
+          "priorities"
+        ],
+        "title": "Today",
         "type": "object"
       },
       "Tokens": {
@@ -3115,6 +3355,336 @@ export type ApiDocument = {
         "summary": "First Week",
         "tags": [
           "Placement"
+        ]
+      }
+    },
+    "/v1/plan/tasks/{id}": {
+      "get": {
+        "operationId": "getPlanTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanTask"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read Task",
+        "tags": [
+          "Daily plan"
+        ]
+      }
+    },
+    "/v1/plan/tasks/{id}/complete": {
+      "post": {
+        "operationId": "completeTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanTask"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Task",
+        "tags": [
+          "Daily plan"
+        ]
+      }
+    },
+    "/v1/plan/tasks/{id}/start": {
+      "post": {
+        "operationId": "startTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanTask"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Task",
+        "tags": [
+          "Daily plan"
+        ]
+      }
+    },
+    "/v1/plan/today": {
+      "get": {
+        "operationId": "getToday",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Today"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Today",
+        "tags": [
+          "Daily plan"
         ]
       }
     },

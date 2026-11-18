@@ -102,10 +102,12 @@ export function SideNav({
       <Label variant="wordmark" color={colors.primary} style={styles.wordmark}>
         {appName ?? appConfig.expo.name}
       </Label>
-      {examLabel && <Chip tone="butter" label={examLabel} />}
       <View style={styles.links}>
         <NavItems {...props} side />
       </View>
+      {examLabel && (
+        <Chip tone="butter" style={styles.examChip} label={examLabel} />
+      )}
     </View>
   );
 }
@@ -148,6 +150,7 @@ const styles = StyleSheet.create({
     gap: space.x20,
   },
   wordmark: { paddingHorizontal: space.x14 },
+  examChip: { marginTop: "auto" },
   links: { gap: space.x4 },
   sideItem: {
     minHeight: size.choice,

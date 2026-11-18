@@ -15,6 +15,8 @@ export const space = {
   x22: 22,
   x24: 24,
   x32: 32,
+  x40: 40,
+  x48: 48,
 } as const;
 export const radius = {
   tiny: 3,
@@ -54,6 +56,7 @@ export const size = {
   segment: 6,
   rail: 224,
   column: 560,
+  priorityName: 120,
   wide: 1024,
 } as const;
 export const shadow = {

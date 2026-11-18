@@ -121,7 +121,8 @@ export function SettingsForm({
         ))}
         {legal && (
           <Label>
-            {t[legal]} · {t.legalPending}
+            {t[legal]} · {legal === "terms" ? t.refund : t.consent} ·{" "}
+            {t.legalPending}
           </Label>
         )}
       </Card>
@@ -155,7 +156,7 @@ export function SettingsForm({
       <Button
         variant="text"
         label={tr.nav.back}
-        onPress={() => router.replace("/today")}
+        onPress={() => router.dismissTo("/today")}
       />
     </Screen>
   );

@@ -12,6 +12,7 @@ from app.modules.accounts.access import router as access_router
 from app.modules.accounts.router import router as account_router
 from app.modules.content.router import router as catalogue_router
 from app.modules.placement.router import router as placement_router
+from app.modules.plan.router import router as plan_router
 from app.modules.system.config import router as config_router
 from app.modules.system.router import router as system_router
 
@@ -64,7 +65,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.include_router(system_router, prefix="/v1")
     application.include_router(catalogue_router, prefix="/v1")
-    for router in (account_router, access_router, placement_router, config_router):
+    for router in (
+        account_router,
+        access_router,
+        placement_router,
+        plan_router,
+        config_router,
+    ):
         application.include_router(router, prefix="/v1")
     return application
 
