@@ -8,4 +8,6 @@ Keep equations in the version 1 content bundle as plain, selectable text. Each q
 
 The existing percentage problem in the offline seed includes the ratio `(0,4 × N + 5) / (N + 5) = 0,5`. The reader displays each transformation separately and finishes with `N = 2,5 / 0,1 = 25`. The component test compares the displayed operation strings with the imported steps. Playwright answers the same question through the study library, finds the final equation, and checks the page width for overflow at 390 and 1280 px. [Seed problem](../content/seed/sample-content.json) · [Component test](../apps/app/tests/study.test.tsx) · [Browser test](../apps/app/e2e/study.spec.ts)
 
+An iPhone 17 simulator on iOS 26.1 and an Android API 36.1 phone emulator both completed the same question from the topic library. Scrolling the feedback displayed the sixth operation with its decimal commas, slash and result.
+
 Stacked fractions, matrices, or notation that relies on vertical alignment would justify another trial using actual examples from a future content batch. A TeX renderer such as KaTeX produces HTML and MathML, so a native implementation would need a rendering surface and accessibility checks on both phone platforms. The current corpus and the existing shared text component require no additional package. [KaTeX output options](https://katex.org/docs/options)

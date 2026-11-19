@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { DeviceEventEmitter } from "react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import seed from "../../../content/seed/sample-content.json";
 import { Review } from "../src/features/study/Review";
 import { StudyCard } from "../src/features/study/StudyCard";
@@ -116,6 +117,17 @@ test("feedback opens other rationales, a recommended lesson and a question repor
   expect(read).toHaveBeenCalledWith(lesson.id);
   await fireEvent.press(button(t.report));
   expect(button(t.send)).toBeDisabled();
+  const sheet = screen.getByTestId("study-sheet");
+  await fireEvent(sheet, "layout", {
+    persist: () => {},
+    nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 844 } },
+  });
+  await act(async () => {
+    DeviceEventEmitter.emit("keyboardWillShow", {
+      endCoordinates: { screenX: 0, screenY: 544, width: 390, height: 300 },
+    });
+  });
+  expect(sheet).toHaveStyle({ paddingBottom: 300 });
   await fireEvent.changeText(
     screen.getByLabelText(t.reportPrompt),
     "  İşlemi kontrol edin. ",

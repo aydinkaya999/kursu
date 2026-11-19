@@ -152,6 +152,7 @@ export function Review({
         <Sheet title={t.report} onClose={() => setForm(false)}>
           <Input
             label={t.reportPrompt}
+            testID="study-report-text"
             value={text}
             onChangeText={setText}
             multiline

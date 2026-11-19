@@ -1,5 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { Modal, ScrollView, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, Card, IconButton, Label, Screen } from "../../components/Core";
 import {
@@ -36,7 +43,11 @@ export function Sheet({
 }) {
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
-      <View style={s.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={s.backdrop}
+        testID="study-sheet"
+      >
         <SafeAreaView edges={["bottom"]} style={s.sheet}>
           <View style={s.heading}>
             <Label variant="h2" accessibilityRole="header">
@@ -51,7 +62,7 @@ export function Sheet({
             {children}
           </ScrollView>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
