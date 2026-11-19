@@ -43,7 +43,10 @@ answers = Table(
     Base.metadata,
     Column("id", Uuid, primary_key=True),
     Column("user_id", Uuid, ForeignKey("users.id"), nullable=False, index=True),
-    Column("placement_id", Uuid, ForeignKey("placement_attempts.id"), nullable=False),
+    Column("placement_id", Uuid, ForeignKey("placement_attempts.id")),
+    Column("practice_id", Uuid, ForeignKey("practice_sessions.id", ondelete="CASCADE")),
+    Column("misconception_id", Text, ForeignKey("misconceptions.id")),
+    Column("feedback", JSONB(none_as_null=True)),
     Column("position", Integer, nullable=False),
     Column("question_id", Text, ForeignKey("questions.id"), nullable=False),
     Column("subtest_id", Text, ForeignKey("subtests.id"), nullable=False),
@@ -56,5 +59,10 @@ answers = Table(
     UniqueConstraint("user_id", "client_answer_id"),
     UniqueConstraint("placement_id", "position"),
     UniqueConstraint("placement_id", "question_id"),
+    UniqueConstraint("practice_id", "position", name="uq_practice_position"),
+    UniqueConstraint("practice_id", "question_id", name="uq_practice_question"),
+    CheckConstraint(
+        "num_nonnulls(placement_id, practice_id) = 1", name="ck_answer_session"
+    ),
     CheckConstraint("selected_option IN ('A','B','C','D','E')", name="ck_answer_option"),
 )

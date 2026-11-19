@@ -54,6 +54,9 @@ def main() -> None:
         # Keep these UI journeys in a study season even when the example exam is past.
         day = server_now().astimezone(ISTANBUL).date()
         for item in config["remote_config"]:
+            # Use a regular study day here. API tests cover mock Sundays.
+            if item["key"] == "mock_day" and day.weekday() == 6:
+                item["value"] = "saturday"
             if item["key"] == "exam_date" and date.fromisoformat(
                 item["value"]
             ) <= day + timedelta(days=30):

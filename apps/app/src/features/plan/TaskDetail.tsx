@@ -1,70 +1,97 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
-import { View } from "react-native";
-import { Screen, Card, Button, Label } from "../../components/Core";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { Screen, Button, Label } from "../../components/Core";
 import { tr } from "../../i18n/tr";
 import { formatDuration } from "../../lib/format";
-import { space } from "../../theme";
-import { Status, StatusScreen } from "../placement/Status";
-import { getTask, getLesson, taskAction } from "./api";
+import { Status } from "../placement/Status";
+import { startPractice } from "../study/api";
+import { StudyStatus } from "../study/StudyStatus";
+import { getTask, taskAction } from "./api";
 import { describe } from "./tasks";
 
 export default function TaskDetail() {
-  const { id } = useLocalSearchParams<{ id?: string }>(),
+  const { id } = useLocalSearchParams<{ id: string }>(),
     cache = useQueryClient();
   const q = useQuery({
-      queryKey: ["task", id],
-      queryFn: () => getTask(id!),
-      enabled: !!id,
-      retry: false,
-      networkMode: "always",
-    }),
-    task = q.data;
-  const lessonId = task?.kind === "lesson" ? task.content_id : null;
-  const lesson = useQuery({
-    queryKey: ["lesson", lessonId],
-    queryFn: () => getLesson(lessonId!),
-    enabled: !!lessonId,
+    queryKey: ["task", id],
+    queryFn: () => getTask(id),
+    enabled: !!id,
     retry: false,
     networkMode: "always",
   });
+  const task = q.data;
+  const topic = task?.kind === "topic_test" && task.state !== "done";
+  const practice = useQuery({
+    queryKey: ["task-practice", id],
+    queryFn: () =>
+      startPractice({
+        kind: "topic_test",
+        content_id: task!.content_id!,
+        task_id: id,
+      }),
+    enabled: topic,
+    retry: false,
+    networkMode: "always",
+    refetchOnWindowFocus: false,
+  });
+  const back = () => router.dismissTo("/today");
   const complete = useMutation({
     networkMode: "always",
     mutationFn: async () => {
-      if (task?.state === "pending") await taskAction(id!, "start");
-      return taskAction(id!, "complete");
+      if (task?.state === "pending") await taskAction(id, "start");
+      return taskAction(id, "complete");
     },
     onSuccess: async (value) => {
       cache.setQueryData(["task", id], value);
       await cache.invalidateQueries({ queryKey: ["today"] });
-      router.dismissTo("/today");
+      back();
     },
   });
-  if (!id)
+  if (!task || q.error)
     return (
-      <Screen>
-        <Button
-          label={tr.nav.back}
-          onPress={() => router.dismissTo("/today")}
-        />
-      </Screen>
+      <StudyStatus
+        error={q.error}
+        retry={() => void q.refetch()}
+        onBack={back}
+      />
     );
-  if (!task)
-    return <StatusScreen error={q.error} retry={() => void q.refetch()} />;
+  if (task.kind === "lesson" && task.content_id)
+    return (
+      <Redirect
+        href={{
+          pathname: "/lessons/[lessonId]",
+          params: { lessonId: task.content_id, task: id, from: "today" },
+        }}
+      />
+    );
+  if (topic) {
+    if (!practice.data || practice.error)
+      return (
+        <StudyStatus
+          error={practice.error}
+          retry={() => void practice.refetch()}
+          onBack={back}
+        />
+      );
+    return (
+      <Redirect
+        href={{
+          pathname: "/practice/[sessionId]",
+          params: { sessionId: practice.data.id, from: "today" },
+        }}
+      />
+    );
+  }
   const summary = describe(task);
   return (
     <Screen
       footer={
         <>
-          <Button
-            variant="secondary"
-            label={tr.nav.back}
-            onPress={() => router.dismissTo("/today")}
-          />
+          <Button variant="secondary" label={tr.nav.back} onPress={back} />
           {task.state !== "done" && (
             <Button
               label={tr.today.finish}
-              disabled={complete.isPending || (!!lessonId && !lesson.data)}
+              disabled={complete.isPending}
               onPress={() => complete.mutate()}
             />
           )}
@@ -77,21 +104,6 @@ export default function TaskDetail() {
       <Label variant="meta">
         {summary.meta} · {formatDuration(task.minutes)}
       </Label>
-      {lessonId && !lesson.data && (
-        <Status error={lesson.error} retry={() => void lesson.refetch()} />
-      )}
-      {lesson.data?.cards.map((card) => (
-        <Card key={card.position}>
-          <Label variant="h2">{card.title}</Label>
-          {card.blocks.map((b, i) => (
-            <View key={i} style={{ gap: space.x4 }}>
-              <Label weight={700}>{b.heading}</Label>
-              <Label>{b.text}</Label>
-            </View>
-          ))}
-          {card.tip && <Label>{card.tip}</Label>}
-        </Card>
-      ))}
       {task.state === "done" && <Label>{tr.today.finished}</Label>}
       {complete.error && (
         <Status error={complete.error} retry={() => complete.mutate()} />

@@ -51,6 +51,19 @@ def validate_bundle(document: object, *, production: bool) -> Bundle:
             seen.add(identifier)
             if production and row.get("is_placeholder"):
                 raise ContentError(f"{identifier}: production refuses placeholders")
+            if row.get("status") in ("published", "prerelease") and group in (
+                "lessons",
+                "questions",
+            ):
+                source = row["source"]
+                if row.get("subtest_id") == "legislation" and source["kind"] != "law":
+                    raise ContentError(f"{group}: {identifier} needs a law source")
+                if source["kind"] == "law" and not source.get("quote"):
+                    raise ContentError(
+                        f"{group}: {identifier} needs the cited article text"
+                    )
+                if row.get("subtest_id") == "quantitative" and not row["solution_steps"]:
+                    raise ContentError(f"{group}: {identifier} needs solution steps")
     for lesson in document.get("lessons", []):
         for check in lesson["check_questions"]:
             if check["card_position"] > len(lesson["cards"]):

@@ -3,7 +3,7 @@
 from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, Select, Table, and_, select
+from sqlalchemy import ColumnElement, Select, Table, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.content import models as db
@@ -17,13 +17,27 @@ async def records[T: BaseModel](
     return [model.model_validate(row) for row in rows]
 
 
+def has_practice_feedback() -> ColumnElement[bool]:
+    q = db.questions.c
+    return and_(
+        or_(q.subtest_id != "quantitative", func.jsonb_array_length(q.solution_steps) > 0),
+        or_(
+            q.subtest_id != "legislation",
+            and_(q.source["kind"].astext == "law", q.source["quote"].astext.is_not(None)),
+        ),
+    )
+
+
 def published_collection(
     parent: Table, links: Table, parent_key: str
 ) -> ColumnElement[bool]:
     hidden_question = (
         select(links.c.question_id)
         .join_from(links, db.questions)
-        .where(links.c[parent_key] == parent.c.id, db.questions.c.status != "published")
+        .where(
+            links.c[parent_key] == parent.c.id,
+            or_(db.questions.c.status != "published", ~has_practice_feedback()),
+        )
         .exists()
     )
     return and_(parent.c.status == "published", ~hidden_question)
@@ -33,7 +47,13 @@ def lesson_catalogue() -> Select[Any]:
     lessons = db.lessons.c
     return select(
         lessons.id, lessons.topic_id, lessons.title, lessons.minutes, lessons.is_placeholder
-    ).where(published_collection(db.lessons, db.lesson_check_questions, "lesson_id"))
+    ).where(
+        published_collection(db.lessons, db.lesson_check_questions, "lesson_id"),
+        or_(
+            lessons.source["kind"].astext != "law",
+            lessons.source["quote"].astext.is_not(None),
+        ),
+    )
 
 
 async def lesson_detail(session: AsyncSession, lesson_id: str) -> LessonDetail | None:
@@ -41,7 +61,9 @@ async def lesson_detail(session: AsyncSession, lesson_id: str) -> LessonDetail |
     await session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
     detail_query = (
         lesson_catalogue()
-        .add_columns(db.lessons.c.source)
+        .join_from(db.lessons, db.topics)
+        .join_from(db.topics, db.subtests)
+        .add_columns(db.lessons.c.source, db.subtests.c.short_name.label("subtest"))
         .where(db.lessons.c.id == lesson_id)
     )
     header = (await session.execute(detail_query)).mappings().one_or_none()

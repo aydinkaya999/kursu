@@ -3,8 +3,9 @@
 from datetime import datetime
 from itertools import batched, groupby
 from operator import itemgetter
+from typing import Any
 
-from sqlalchemy import Table, delete, or_, select, text
+from sqlalchemy import ColumnElement, Table, case, delete, or_, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,9 +25,19 @@ async def upsert(session: AsyncSession, table: Table, records: list[Row]) -> Non
     ]
     for batch in batched(rows, 200):
         statement = insert(table).values(list(batch))
-        values = {
+        values: dict[str, ColumnElement[Any]] = {
             c.name: statement.excluded[c.name] for c in table.columns if c.name not in keys
         }
+        if table is db.questions:
+            # An offline publication bundle may predate a live quarantine.
+            values["status"] = case(
+                (
+                    (table.c.status == "quarantined")
+                    & statement.excluded.status.in_(("published", "prerelease")),
+                    table.c.status,
+                ),
+                else_=statement.excluded.status,
+            )
         changed = or_(*(table.c[k].is_distinct_from(v) for k, v in values.items()))
         await session.execute(
             statement.on_conflict_do_update(index_elements=keys, set_=values, where=changed)

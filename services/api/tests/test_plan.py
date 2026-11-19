@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, select, update
+from study_support import finish_task
 
 from app.core.http import ISTANBUL, server_now
 from app.core.settings import Settings
@@ -142,6 +143,8 @@ def test_plan_1_8_10_tasks_dates_and_streak(demo: Settings, engine: Engine) -> N
         assert c.get(path, headers=other).status_code == 404
         assert c.post(path + "/complete", headers=user).status_code == 409
         assert c.post(path + "/start", headers=user).json()["state"] == "started"
+        assert c.post(path + "/complete", headers=user).status_code == 409
+        finish_task(c, user, job)
         with ThreadPoolExecutor(max_workers=2) as pool:
             assert [
                 r.status_code
@@ -162,9 +165,7 @@ def test_plan_1_8_10_tasks_dates_and_streak(demo: Settings, engine: Engine) -> N
         assert sum(t["minutes"] for t in day["tasks"]) <= 30
         assert sum(t["is_next"] for t in day["tasks"]) == 1
         for t in day["tasks"]:
-            url = "/v1/plan/tasks/" + t["id"]
-            c.post(url + "/start", headers=user).raise_for_status()
-            c.post(url + "/complete", headers=user).raise_for_status()
+            finish_task(c, user, t)
         result = today()
         assert (
             result["done"] == result["total"]
@@ -302,10 +303,7 @@ def test_plan_9_deferred_tasks_return_on_their_assigned_dates(
             assert {(t["kind"], t["content_id"]) for t in work} & missed_keys == {key}
             assert sum(t["minutes"] for t in work) <= 30
             for job in work:
-                for action in ("start", "complete"):
-                    c.post(
-                        f"/v1/plan/tasks/{job['id']}/{action}", headers=auth
-                    ).raise_for_status()
+                finish_task(c, auth, job)
 
 
 def test_withdrawn_lesson_is_replaced_before_start(demo: Settings, engine: Engine) -> None:

@@ -20,6 +20,7 @@ function type(
 export const typography = {
   todayWide: type(32, 40, 800, -0.32),
   dayCount: type(17, 22, 800),
+  feedbackTitle: type(17, 24, 800),
   dayPercent: type(22, 26, 800),
   resultNet: type(44, 48, 800, -0.88),
   resultNote: type(12, 17, 400),
@@ -28,7 +29,7 @@ export const typography = {
   display: type(42, 48, 800, -0.84),
   h1: type(26, 32, 800, -0.26),
   intro: type(28, 34, 800, -0.28),
-  lessonTitle: type(21, 27, 800),
+  lessonTitle: type(21, 27, 800, -0.21),
   screenTitle: type(22, 28, 800),
   compactTitle: type(19, 26, 800),
   navTitle: type(15, 20, 800),

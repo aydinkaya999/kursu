@@ -58,7 +58,7 @@ Primary keys are UUIDs unless noted. Content rows use stable string ids (slugs) 
 | Accounts | `users` (is_guest, created_at, deleted_at) · `identities` (user_id, provider email/google/apple, subject) · `refresh_tokens` (user_id, token_hash, expires_at, revoked_at) · `email_codes` (email, code_hash, expires_at, attempts) · `profiles` (user_id, field_id, score_type, daily_minutes, attempt_kind first/repeat, notification_time) |
 | Reference | `fields` (id, name, score_type) · `subtests` (id, name, short_name, question_count, exam_order, weight_p1) · `remote_config` (key, value jsonb) |
 | Content | `topics` (id, subtest_id, name, exam_weight) · `objectives` (id, topic_id, text) · `misconceptions` (id, topic_id, text) · `lessons` (id, topic_id, title, minutes, source jsonb, status) · `lesson_cards` (lesson_id, position, kind, title, blocks jsonb, tip) · `questions` (id, subtest_id, topic_id, objective_id, difficulty 1–3, stem, options jsonb A–E, correct_option, rationales jsonb per option with misconception_id, solution_steps jsonb, source jsonb, status, is_placeholder) · `lesson_check_questions` (lesson_id, question_id, card_position) · `mock_exams` (id, title, status, published_at) · `mock_exam_questions` (mock_exam_id, position 1–80, question_id) |
-| Study | `placement_attempts` (user_id, kind full/short, state, level per subtest jsonb, result jsonb) · `practice_sessions` (user_id, type topic_test/review/lesson_check, topic_id, state) · `answers` (user_id, question_id, session ref, selected_option nullable, is_correct, not_sure, client_answer_id unique, answered_at) · `mastery` (user_id, topic_id, value, answers_count, state) · `mistake_entries` (user_id, objective_id, misconception_id nullable, first_question_id, interval_index, due_on, correct_streak, status open/learned) · `lesson_completions` (user_id, lesson_id, completed_at) |
+| Study | `placement_attempts` (user_id, kind full/short, state, level per subtest jsonb, result jsonb) · `practice_sessions` (user_id, type topic_test/review/lesson_check, topic_id, state) · `answers` (user_id, question_id, session ref, selected_option nullable, is_correct, not_sure, client_answer_id unique, answered_at) · `mastery` (user_id, topic_id, value, answers_count, derived state) · `mistake_entries` (user_id, objective_id, misconception_id nullable, first_question_id, interval_index, due_on, correct_streak, status open/learned) · `lesson_completions` (user_id, lesson_id, completed_at) |
 | Plan | `daily_plans` (user_id, plan_date, daily_minutes, completed_at) · `plan_tasks` (plan_id, position, type review/lesson/topic_test/mock, ref jsonb, est_minutes, state) · `streaks` (user_id, current, longest, last_completed_on, freeze_used_week) |
 | Mock | `mock_attempts` (user_id, mock_exam_id, mode timed/practice, started_at, deadline_at, submitted_at, result jsonb) · `mock_answers` (attempt_id, question_id, selected_option nullable, flagged, updated_at) |
 | Commerce | `entitlements` (user_id, kind season_pass, valid_until, source web/ios/android, provider_ref) · `purchases` (user_id, provider, provider_ref, amount, currency, state) · `price_assignments` (user_id, price_group) · `usage_counters` (user_id, counter, period, count) |
@@ -73,8 +73,8 @@ Primary keys are UUIDs unless noted. Content rows use stable string ids (slugs) 
 | Profile | `GET /v1/me` · `PATCH /v1/me/profile` · `GET /v1/fields` |
 | Placement | `POST /v1/placement` (start or resume; returns the next question) · `POST /v1/placement/{id}/answers` · `GET /v1/placement/{id}/result` |
 | Plan | `GET /v1/plan/today` · `GET /v1/plan/first-week` · `GET /v1/plan/tasks/{id}` · `POST /v1/plan/tasks/{id}/start` · `POST /v1/plan/tasks/{id}/complete` |
-| Catalogue | `GET /v1/subtests` · `GET /v1/topics` · `GET /v1/lessons` · `GET /v1/lessons/{id}` · `POST /v1/lessons/{id}/complete` |
-| Practice | `POST /v1/practice-sessions` · `GET /v1/practice-sessions/{id}` · `POST /v1/practice-sessions/{id}/answers` (returns the feedback) · `POST /v1/practice-sessions/{id}/finish` |
+| Catalogue | `GET /v1/subtests` · `GET /v1/topics` · `GET /v1/lessons` · `GET /v1/lessons/{id}` · `GET /v1/study/lessons` (personalised mastery and completions) · `POST /v1/lessons/{id}/complete` |
+| Practice | `POST /v1/practice-sessions` · `GET /v1/practice-sessions/{id}` · `POST /v1/practice-sessions/{id}/answers` (returns feedback for a selected option) · `POST /v1/practice-sessions/{id}/advance` · `POST /v1/practice-sessions/{id}/finish` |
 | Notebook | `GET /v1/notebook?group_by=topic\|misconception` · `GET /v1/notebook/summary` |
 | Mock | `GET /v1/mocks` · `POST /v1/mocks/{id}/attempts` · `GET /v1/mock-attempts/{id}` · `PUT /v1/mock-attempts/{id}/answers/{question_id}` · `POST /v1/mock-attempts/{id}/submit` · `GET /v1/mock-attempts/{id}/result` · `GET /v1/mock-attempts/{id}/review` |
 | Progress | `GET /v1/progress` |
@@ -83,6 +83,8 @@ Primary keys are UUIDs unless noted. Content rows use stable string ids (slugs) 
 | Photo (P1) | `POST /v1/photo-solutions` · `GET /v1/photo-solutions/{id}` |
 
 Question payloads sent before an answer contain the stem and options only. The correct option, rationales, steps and source are returned by the answer endpoint, and by the mock review endpoint after submission (WHY-6, MOCK-7).
+
+Study sessions persist their question order and current position. Each answer belongs to exactly one placement or practice session. Practice feedback is private to the respondent and survives a reload. Graded answers and the first completion of each lesson determine the stored per-topic score and graded-answer count. The API derives the mastery state from these values.
 
 ## 6. Authentication
 
@@ -100,7 +102,7 @@ Question payloads sent before an answer contain the stem and options only. The c
 - Offline bundles use the versioned JSON Schema in `content/schema/`. The canonical example is `content/seed/sample-content.json`. The seed configuration is in `content/seed/config.json`.
 - `import-content` is idempotent: it upserts by id and never deletes rows that have answers.
 - `make-placeholders` generates enough clearly fake questions, lessons and mocks to exercise every flow (placement needs every subtest at all three difficulty levels; a mock needs 80). Placeholders carry `is_placeholder = true`, start with "[ÖRNEK]" in the stem, and are refused by the importer when `APP_ENV=production`.
-- Text is plain text with line breaks. Fractions are written `a/b`. Whether maths needs a richer notation is decided by a spike in M6.
+- Text is plain text with line breaks. Quantitative solutions store one operation per step and group slash fractions with parentheses. [M6 maths notation spike](MATH_NOTATION.md)
 - Status values: `draft`, `prerelease`, `published`, `quarantined`, `retired` (CNT-1, CNT-2).
 
 ## 8. Entitlements, limits and remote config
@@ -141,5 +143,5 @@ These were decided to unblock the build. The product owner may change them.
 5. Scheduled work runs as CLI jobs, with no queue.
 6. Payment providers for web and for in-app purchase are not chosen.
 7. The AI provider for photo solve is not chosen.
-8. Maths is plain text until the M6 spike.
+8. Use the shared text renderer for the current maths corpus. Revisit typesetting when an imported example needs two-dimensional notation. [M6 maths notation spike](MATH_NOTATION.md)
 9. Hosting, regions and data residency are not decided.

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { tr } from "../src/i18n/tr";
 import type { Day } from "../src/features/plan/api";
+import { readCards, skipQuestions } from "./study-flow";
 import { css, showReference } from "./reference";
 
 test("Today opens the server's next task, credits completion and responds to a new budget", async ({
@@ -57,8 +58,15 @@ test("Today opens the server's next task, credits completion and responds to a n
     await page
       .getByRole("button", { name: tr.controls.start, exact: true })
       .click();
-    await expect(page).toHaveURL(/\/plan\/task/);
-    await page.getByRole("button", { name: t.finish }).click();
+    const task = revised.tasks[i]!;
+    if (task.kind === "lesson") {
+      await readCards(page);
+      await skipQuestions(page, 2);
+    } else if (task.kind === "topic_test") {
+      await skipQuestions(page, task.count);
+    } else {
+      await page.getByRole("button", { name: t.finish }).click();
+    }
     await expect(page).toHaveURL(/\/today$/);
     await expect(progress).toHaveAttribute(
       "aria-valuenow",

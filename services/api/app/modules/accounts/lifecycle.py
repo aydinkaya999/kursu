@@ -14,6 +14,7 @@ from app.modules.accounts.models import (
 )
 from app.modules.placement.models import answers, attempts
 from app.modules.plan.merge import merge_plans
+from app.modules.practice.merge import merge_study
 
 
 async def erase(db: AsyncSession, user: UUID) -> None:
@@ -55,6 +56,7 @@ async def merge(db: AsyncSession, source: UUID, target: UUID) -> None:
     await db.execute(
         update(answers).where(answers.c.user_id == source).values(user_id=target)
     )
+    await merge_study(db, source, target)
     await merge_plans(db, source, target)
     await erase(db, source)
 

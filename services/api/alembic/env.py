@@ -6,6 +6,7 @@ from app.modules.accounts import models as accounts  # noqa: F401 (register tabl
 from app.modules.content.models import metadata
 from app.modules.placement import models as placement  # noqa: F401 (register tables)
 from app.modules.plan import models as plan  # noqa: F401 (register tables)
+from app.modules.practice import models as practice  # noqa: F401 (register tables)
 
 database_url = Settings().database_url
 

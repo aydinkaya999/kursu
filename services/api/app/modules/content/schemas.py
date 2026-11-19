@@ -85,6 +85,7 @@ class LessonSource(BaseModel):
 
 
 class LessonDetail(LessonSummary):
+    subtest: str
     source: LawSource | NotesSource | LessonSource
     cards: list[LessonCard]
     check_questions: list[UnansweredQuestion]

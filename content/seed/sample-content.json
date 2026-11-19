@@ -43,7 +43,8 @@
         "kind": "law",
         "name": "1739 sayılı Millî Eğitim Temel Kanunu",
         "short_name": "1739 sayılı Kanun",
-        "articles": [4, 8]
+        "articles": [4, 8],
+        "quote": "Madde 4\nEğitim kurumları dil, ırk, cinsiyet, engellilik ve din ayrımı gözetilmeksizin herkese açıktır. Eğitimde hiçbir kişiye, aileye, zümreye veya sınıfa imtiyaz tanınamaz.\n\nMadde 8\nEğitimde kadın, erkek herkese fırsat ve imkan eşitliği sağlanır.\nMaddi imkanlardan yoksun başarılı öğrencilerin en yüksek eğitim kademelerine kadar öğrenim görmelerini sağlamak amacıyle parasız yatılılık, burs, kredi ve başka yollarla gerekli yardımlar yapılır.\nÖzel eğitime ve korunmaya muhtaç çocukları yetiştirmek için özel tedbirler alınır."
       },
       "cards": [
         {
@@ -105,7 +106,7 @@
         "E": { "text": "Eğitim hakkı (madde 7), ilköğretim görmenin her vatandaşın hakkı olduğunu belirtir; başarılı öğrenciye verilen desteği anlatmaz." }
       },
       "solution_steps": [],
-      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 8, "quote": "… parasız yatılılık, burs, kredi ve başka yollarla gerekli yardımlar yapılır." },
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "name": "1739 sayılı Millî Eğitim Temel Kanunu", "article": 8, "quote": "Eğitimde kadın, erkek herkese fırsat ve imkan eşitliği sağlanır.\nMaddi imkanlardan yoksun başarılı öğrencilerin en yüksek eğitim kademelerine kadar öğrenim görmelerini sağlamak amacıyle parasız yatılılık, burs, kredi ve başka yollarla gerekli yardımlar yapılır.\nÖzel eğitime ve korunmaya muhtaç çocukları yetiştirmek için özel tedbirler alınır." },
       "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
     },
     {
@@ -127,7 +128,7 @@
         "E": { "text": "Planlılık (madde 14), eğitimin kalkınma hedeflerine uygun planlanmasıdır." }
       },
       "solution_steps": [],
-      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 4 },
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "name": "1739 sayılı Millî Eğitim Temel Kanunu", "article": 4, "quote": "Eğitim kurumları dil, ırk, cinsiyet, engellilik ve din ayrımı gözetilmeksizin herkese açıktır. Eğitimde hiçbir kişiye, aileye, zümreye veya sınıfa imtiyaz tanınamaz." },
       "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
     },
     {
@@ -149,7 +150,7 @@
         "E": { "text": "Süreklilik (madde 9), eğitimin hayat boyu sürmesidir." }
       },
       "solution_steps": [],
-      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "article": 8 },
+      "source": { "kind": "law", "short_name": "1739 sayılı Kanun", "name": "1739 sayılı Millî Eğitim Temel Kanunu", "article": 8, "quote": "Eğitimde kadın, erkek herkese fırsat ve imkan eşitliği sağlanır.\nMaddi imkanlardan yoksun başarılı öğrencilerin en yüksek eğitim kademelerine kadar öğrenim görmelerini sağlamak amacıyle parasız yatılılık, burs, kredi ve başka yollarla gerekli yardımlar yapılır.\nÖzel eğitime ve korunmaya muhtaç çocukları yetiştirmek için özel tedbirler alınır." },
       "related_lesson_id": "lesson.legislation.firsat-ve-imkan-esitligi"
     },
     {
@@ -195,7 +196,10 @@
       "solution_steps": [
         { "title": "Bilinmeyeni adlandır", "text": "Sınıf mevcudu N olsun. Kız sayısı 0,4 × N'dir." },
         { "title": "Denklemi kur", "text": "5 kız eklenince: (0,4 × N + 5) / (N + 5) = 0,5" },
-        { "title": "Çöz", "text": "0,4 × N + 5 = 0,5 × N + 2,5. Buradan 0,1 × N = 2,5 ve N = 25 bulunur." }
+        { "title": "Paydayı kaldır", "text": "0,4 × N + 5 = 0,5 × (N + 5)" },
+        { "title": "Parantezi aç", "text": "0,4 × N + 5 = 0,5 × N + 2,5" },
+        { "title": "Terimleri topla", "text": "0,1 × N = 2,5" },
+        { "title": "Böl", "text": "N = 2,5 / 0,1 = 25" }
       ],
       "source": { "kind": "lesson", "lesson_title": "Yüzde ve oran problemleri" },
       "related_lesson_id": null

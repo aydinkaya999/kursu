@@ -7,6 +7,19 @@ const { createClient }: typeof import("fets") = require("fets");
 export type ApiDocument = {
   "components": {
     "schemas": {
+      "Advance": {
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id"
+        ],
+        "title": "Advance",
+        "type": "object"
+      },
       "Breakdown": {
         "properties": {
           "asked": {
@@ -38,6 +51,20 @@ export type ApiDocument = {
           "priority"
         ],
         "title": "Breakdown",
+        "type": "object"
+      },
+      "CompleteLesson": {
+        "properties": {
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "CompleteLesson",
         "type": "object"
       },
       "EmailStart": {
@@ -107,6 +134,96 @@ export type ApiDocument = {
           "details"
         ],
         "title": "ErrorBody",
+        "type": "object"
+      },
+      "Feedback": {
+        "properties": {
+          "card_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Position"
+          },
+          "correct": {
+            "$ref": "#/components/schemas/Letter"
+          },
+          "is_correct": {
+            "title": "Is Correct",
+            "type": "boolean"
+          },
+          "misconception_count": {
+            "title": "Misconception Count",
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/UnansweredQuestion"
+          },
+          "rationales": {
+            "items": {
+              "$ref": "#/components/schemas/Rationale"
+            },
+            "title": "Rationales",
+            "type": "array"
+          },
+          "related_lesson_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related Lesson Id"
+          },
+          "selected": {
+            "$ref": "#/components/schemas/Letter"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LawSource"
+              },
+              {
+                "$ref": "#/components/schemas/LessonSource"
+              },
+              {
+                "$ref": "#/components/schemas/NotesSource"
+              }
+            ],
+            "title": "Source"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/SolutionStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "suggest_lesson": {
+            "title": "Suggest Lesson",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "question",
+          "selected",
+          "correct",
+          "is_correct",
+          "rationales",
+          "source",
+          "steps",
+          "misconception_count",
+          "suggest_lesson",
+          "related_lesson_id",
+          "card_position"
+        ],
+        "title": "Feedback",
         "type": "object"
       },
       "FocusTopic": {
@@ -353,6 +470,10 @@ export type ApiDocument = {
             ],
             "title": "Source"
           },
+          "subtest": {
+            "title": "Subtest",
+            "type": "string"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -368,6 +489,7 @@ export type ApiDocument = {
           "title",
           "minutes",
           "is_placeholder",
+          "subtest",
           "source",
           "cards",
           "check_questions"
@@ -434,6 +556,14 @@ export type ApiDocument = {
           "C",
           "D",
           "E"
+        ],
+        "type": "string"
+      },
+      "MasteryState": {
+        "enum": [
+          "not_started",
+          "in_progress",
+          "solid"
         ],
         "type": "string"
       },
@@ -817,6 +947,139 @@ export type ApiDocument = {
         "title": "PlanTask",
         "type": "object"
       },
+      "Practice": {
+        "properties": {
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Feedback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PracticeKind"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UnansweredQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/PracticeState"
+          },
+          "subtest": {
+            "title": "Subtest",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "topic_id": {
+            "title": "Topic Id",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "lesson_id",
+          "topic_id",
+          "subtest",
+          "task_id",
+          "position",
+          "total"
+        ],
+        "title": "Practice",
+        "type": "object"
+      },
+      "PracticeKind": {
+        "enum": [
+          "lesson_check",
+          "topic_test"
+        ],
+        "type": "string"
+      },
+      "PracticeStart": {
+        "additionalProperties": false,
+        "properties": {
+          "content_id": {
+            "title": "Content Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PracticeKind"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "kind",
+          "content_id"
+        ],
+        "title": "PracticeStart",
+        "type": "object"
+      },
+      "PracticeState": {
+        "enum": [
+          "question",
+          "feedback",
+          "ready",
+          "completed"
+        ],
+        "type": "string"
+      },
       "Preferences": {
         "properties": {
           "daily_minutes": {
@@ -1075,6 +1338,23 @@ export type ApiDocument = {
         "title": "QuestionOptions",
         "type": "object"
       },
+      "Rationale": {
+        "properties": {
+          "option": {
+            "$ref": "#/components/schemas/Letter"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "option",
+          "text"
+        ],
+        "title": "Rationale",
+        "type": "object"
+      },
       "RefreshRequest": {
         "properties": {
           "platform": {
@@ -1101,6 +1381,40 @@ export type ApiDocument = {
           "platform"
         ],
         "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ReportInput": {
+        "additionalProperties": false,
+        "properties": {
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "text"
+        ],
+        "title": "ReportInput",
+        "type": "object"
+      },
+      "ReportReceipt": {
+        "properties": {
+          "received": {
+            "title": "Received",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "received"
+        ],
+        "title": "ReportReceipt",
         "type": "object"
       },
       "ScoreType": {
@@ -1136,6 +1450,24 @@ export type ApiDocument = {
         "title": "ServiceUnavailable",
         "type": "object"
       },
+      "SolutionStep": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "text"
+        ],
+        "title": "SolutionStep",
+        "type": "object"
+      },
       "Start": {
         "properties": {
           "kind": {
@@ -1144,6 +1476,100 @@ export type ApiDocument = {
           }
         },
         "title": "Start",
+        "type": "object"
+      },
+      "StudyLesson": {
+        "properties": {
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic_id": {
+            "title": "Topic Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "topic_id",
+          "title",
+          "minutes",
+          "is_placeholder",
+          "completed"
+        ],
+        "title": "StudyLesson",
+        "type": "object"
+      },
+      "StudySection": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/StudyTopic"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "topics"
+        ],
+        "title": "StudySection",
+        "type": "object"
+      },
+      "StudyTopic": {
+        "properties": {
+          "can_practice": {
+            "title": "Can Practice",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/StudyLesson"
+            },
+            "title": "Lessons",
+            "type": "array"
+          },
+          "mastery": {
+            "$ref": "#/components/schemas/MasteryState"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mastery",
+          "can_practice",
+          "lessons"
+        ],
+        "title": "StudyTopic",
         "type": "object"
       },
       "Submission": {
@@ -2427,6 +2853,82 @@ export type ApiDocument = {
         ]
       }
     },
+    "/v1/content-reports": {
+      "post": {
+        "operationId": "reportContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Report",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
     "/v1/fields": {
       "get": {
         "operationId": "listFields",
@@ -2582,6 +3084,93 @@ export type ApiDocument = {
         "summary": "Get Lesson",
         "tags": [
           "Catalogue"
+        ]
+      }
+    },
+    "/v1/lessons/{id}/complete": {
+      "post": {
+        "operationId": "completeLesson",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLesson"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Lesson",
+        "tags": [
+          "Study"
         ]
       }
     },
@@ -3685,6 +4274,484 @@ export type ApiDocument = {
         "summary": "Today",
         "tags": [
           "Daily plan"
+        ]
+      }
+    },
+    "/v1/practice-sessions": {
+      "post": {
+        "operationId": "startPractice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
+    "/v1/practice-sessions/{id}": {
+      "get": {
+        "operationId": "getPractice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Session",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
+    "/v1/practice-sessions/{id}/advance": {
+      "post": {
+        "operationId": "advancePractice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Advance"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Advance",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
+    "/v1/practice-sessions/{id}/answers": {
+      "post": {
+        "operationId": "answerPractice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Submission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Answer",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
+    "/v1/practice-sessions/{id}/finish": {
+      "post": {
+        "operationId": "finishPractice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Practice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Finish",
+        "tags": [
+          "Study"
+        ]
+      }
+    },
+    "/v1/study/lessons": {
+      "get": {
+        "operationId": "studyLibrary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StudySection"
+                  },
+                  "title": "Response Studylibrary",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Library",
+        "tags": [
+          "Study"
         ]
       }
     },

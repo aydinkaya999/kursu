@@ -1,6 +1,6 @@
 # Kürsü
 
-Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. A guest can choose a teaching field, take the adaptive AGS placement test and see their estimated net range and first-week study plan.
+Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. Candidates can take the adaptive AGS placement test, open their daily plan, study micro-lessons and practise with questions selected for their mastery.
 
 ## Run locally
 
@@ -54,9 +54,17 @@ Settings supports daily minutes, an optional Istanbul notification time, the AI-
 
 Today opens a personal plan on the first visit of each Istanbul day. The server schedules due reviews, up to two five-minute lessons and a 10–15 question topic test within the selected budget. The configured mock day has one 110-minute exam. In the final 30 days, study days use due reviews and previously opened topics. Changing the daily minutes in Settings rebuilds the current plan and preserves completed work. An unfinished assignment from an earlier day can occupy a later study slot within that day's budget.
 
-Open a row or choose **Başla** to see the assignment. Lesson tasks include the published lesson cards. **Görevi tamamla** records completion and updates Today, the current streak and the weekly goal. Activity-specific scored sessions are scheduled for M6–M8. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. The scheduling inputs at this milestone come from placement responses and completed plan tasks.
+Open a row or choose **Başla** to start the assigned activity. Completing the two lesson checks or the assigned topic test updates Today, the current streak and the weekly goal. Review and mock assignments still use **Görevi tamamla**. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. Placement answers, practice answers and completed lessons contribute to planning.
 
 For the API, use `GET /v1/plan/today`, `GET /v1/plan/tasks/{id}` and the task's `POST /start` and `POST /complete` operations. The server owns all dates, task estimates, state transitions, progress and streaks. Browser tests run against isolated schemas and a local test mailbox. The API's development email log and test mailbox require no mail service.
+
+## Lessons and practice
+
+Open **Dersler** to browse topics, see mastery, open a lesson or choose **Konu testine başla**. In a law lesson, **Madde metni** opens the cited articles. The final card opens two checks. After a wrong answer, **Sonraki soru** returns to the relevant card before the next question. Topic tests opened from the library contain ten questions. Today supplies the length of an assigned test. The server resumes an unfinished activity and records each submitted answer once.
+
+After answering, the chosen option's rationale appears first. Other rationales, the source and any quantitative steps are available on the same screen. A third occurrence of the same misconception suggests a short lesson. **Bu soruda hata var** sends a report. Three distinct reporters withdraw the question from circulation, including open sessions and dependent lessons and mocks. Routine re-imports preserve a reported quarantine.
+
+`GET /v1/study/lessons` returns the candidate's library. Start or resume with `POST /v1/practice-sessions`, then use that session's `GET`, `POST /answers`, `POST /advance` and `POST /finish` operations. Lesson completion also accepts `POST /v1/lessons/{id}/complete` with the session ID. Send reports to `POST /v1/content-reports`. A static web host must route browser navigations such as `/lessons/lesson.legislation.firsat-ve-imkan-esitligi` to `index.html`.
 
 ## Commands
 
@@ -72,7 +80,7 @@ For the API, use `GET /v1/plan/today`, `GET /v1/plan/tasks/{id}` and the task's 
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers guest placement, email registration, settings, account deletion, daily planning, streaks, reference styles and navigation at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports and navigation at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
@@ -84,6 +92,8 @@ An offline bundle has `schema_version: 1` and the collections it wants to import
 
 Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It lists fields, subtests in exam order, topics (optional `subtest_id`), lessons (optional `topic_id`) and mocks. `GET /v1/lessons/{id}` includes the source, ordered cards, and the stem and five options for each check question. The anonymous catalogue requires a published parent and published questions. An unavailable lesson ID returns HTTP 404.
 
+Before publishing, include the cited article text for law material and one step per operation for quantitative questions. Re-import the updated seed when upgrading an M5 database. Older items with missing articles or quantitative steps become available for practice when their source data is completed. The seed quotes articles 4 and 8 from the Ministry's publication of Law No. 1739. [Official text](https://iegm.meb.gov.tr/meb_iys_dosyalar/2025_11/28150724_milliegitimtemelkanunu.pdf) · [Maths notation](docs/MATH_NOTATION.md)
+
 ## Repository
 
 - `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles server state and the placement screens are in `src/features/placement/`.
@@ -92,4 +102,4 @@ Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It 
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md)

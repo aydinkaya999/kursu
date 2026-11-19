@@ -51,6 +51,14 @@ def test_schema_validates_seed_and_rejects_malformed_bundles(sample: Bundle) -> 
         {"status": "live"},
         {"correct_option": "F"},
         {"source": {}},
+        {
+            "source": {
+                "kind": "law",
+                "short_name": question["source"]["short_name"],
+                "article": 8,
+            }
+        },
+        {"subtest_id": "quantitative", "solution_steps": []},
         {"options": {"A": "A"}},
         {"rationales": {**question["rationales"], "F": {}}},
         {"is_placeholder": True},

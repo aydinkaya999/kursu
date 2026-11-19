@@ -25,6 +25,7 @@ from app.modules.placement.schemas import (
     Submission,
     WeekPreview,
 )
+from app.modules.practice import learning
 
 QUOTAS = {
     "full": {
@@ -377,7 +378,7 @@ async def submit(
     subject = order[row["position"] - 1]
     item = (
         await session.execute(
-            select(q.subtest_id, q.topic_id, q.correct_option)
+            select(q.subtest_id, q.topic_id, q.correct_option, q.rationales)
             .where(
                 q.id == data.question_id,
                 q.status.in_(visible(user)),
@@ -403,11 +404,16 @@ async def submit(
             subtest_id=item.subtest_id,
             topic_id=item.topic_id,
             is_correct=correct,
+            misconception_id=item.rationales[data.selected_option].get("misconception_id")
+            if correct is False and data.selected_option
+            else None,
             answered_at=now,
             **data.model_dump(),
         )
     )
     levels = dict(row["levels"])
+    if correct is not None:
+        await learning.refresh(session, user, item.topic_id)
     levels[item.subtest_id] = next_level(levels[item.subtest_id], correct)
     changes: dict[str, Any] = {"levels": levels}
     if row["position"] == len(order):

@@ -11,7 +11,7 @@ class SPAHandler(SimpleHTTPRequestHandler):
 
     def send_head(self):
         path = Path(self.translate_path(urlsplit(self.path).path))
-        if not path.exists() and not path.suffix:
+        if not path.exists() and "text/html" in self.headers.get("Accept", ""):
             self.path = "/index.html"
         return super().send_head()
 

@@ -10,6 +10,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select, update
+from study_support import finish_task, practice_start
 
 from app.core.settings import Settings
 from app.main import create_app
@@ -24,6 +25,7 @@ from app.modules.accounts.models import (
 from app.modules.accounts.providers import IdentityProvider, Provider, provider_client
 from app.modules.placement.models import answers, attempts
 from app.modules.plan.models import plans, streaks, tasks
+from app.modules.practice.models import completions, mastery, reports, sessions
 
 
 class Inbox:
@@ -336,17 +338,12 @@ def test_daily_history_merge_preserves_completed_days_without_duplicate_tasks(
         )
     first = client.get("/v1/plan/today", headers=guest).json()
     for task in first["tasks"]:
-        for action in ("start", "complete"):
-            client.post(
-                f"/v1/plan/tasks/{task['id']}/{action}", headers=guest
-            ).raise_for_status()
+        finish_task(client, guest, task)
     account = headers(login(auth_app, guest, "email"))
     assert client.get("/v1/plan/today", headers=account).json()["streak"] == 1
     fresh, _ = new_guest(client)
     second = client.get("/v1/plan/today", headers=fresh).json()
-    url = f"/v1/plan/tasks/{second['tasks'][0]['id']}"
-    client.post(url + "/start", headers=fresh).raise_for_status()
-    client.post(url + "/complete", headers=fresh).raise_for_status()
+    finish_task(client, fresh, second["tasks"][0])
     merged = headers(login(auth_app, fresh, "email"))
     day = client.get("/v1/plan/today", headers=merged).json()
     assert day["done"] == day["total"] == first["total"] and day["streak"] == 1
@@ -357,4 +354,67 @@ def test_daily_history_merge_preserves_completed_days_without_duplicate_tasks(
     client.delete("/v1/me", headers=merged).raise_for_status()
     with engine.connect() as db:
         for table in (plans, tasks, streaks):
+            assert db.scalar(select(func.count()).select_from(table)) == 0
+
+
+def test_study_data_survives_account_merge_and_is_erased_on_deletion(
+    auth_app: Harness, engine: Engine
+) -> None:
+    client, _, _ = auth_app
+    lesson = "lesson.legislation.firsat-ve-imkan-esitligi"
+    guest, _ = new_guest(client)
+    first = headers(login(auth_app, guest, "email"))
+    second, _ = new_guest(client)
+    for user in (first, second):
+        state = practice_start(client, user, "lesson_check", lesson)
+        url = "/v1/practice-sessions/" + state["id"]
+        for selected in ("B", "C"):
+            question = state["question"]["id"]
+            client.post(
+                url + "/answers",
+                headers=user,
+                json={
+                    "question_id": question,
+                    "selected_option": selected,
+                    "client_answer_id": str(uuid4()),
+                },
+            ).raise_for_status()
+            state = client.post(
+                url + "/advance", headers=user, json={"question_id": question}
+            ).json()
+        client.post(url + "/finish", headers=user).raise_for_status()
+        client.post(
+            "/v1/content-reports",
+            headers=user,
+            json={"question_id": question, "text": "Maddeyi kontrol edin."},
+        ).raise_for_status()
+    unfinished = practice_start(client, second, "topic_test", "quantitative.percent-ratio")
+    merged = headers(login(auth_app, second, "email"))
+    assert (
+        client.get("/v1/practice-sessions/" + unfinished["id"], headers=merged).json()
+        == unfinished
+    )
+    with engine.connect() as db:
+        assert db.scalar(select(func.count()).select_from(completions)) == 1
+        assert db.scalar(select(func.count()).select_from(reports)) == 1
+        assert db.scalar(select(func.count()).select_from(sessions)) == 3
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(answers)
+                .where(answers.c.practice_id.is_not(None))
+            )
+            == 4
+        )
+        assert (
+            db.scalar(
+                select(mastery.c.answers_count).where(
+                    mastery.c.topic_id == "legislation.law-1739-principles"
+                )
+            )
+            == 4
+        )
+    client.delete("/v1/me", headers=merged).raise_for_status()
+    with engine.connect() as db:
+        for table in (sessions, answers, mastery, completions, reports):
             assert db.scalar(select(func.count()).select_from(table)) == 0

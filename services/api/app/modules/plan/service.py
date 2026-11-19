@@ -353,6 +353,8 @@ async def task_action(
         return display(row, None)
     if not row["included"] or row["plan_date"] != now.astimezone(ISTANBUL).date():
         raise ApiError(409, "conflict", "Task is no longer current")
+    if action == "complete" and row["type"] in ("lesson", "topic_test"):
+        raise ApiError(409, "conflict", "Finish the study session to complete this task")
     if action == "complete" and row["state"] == "pending":
         raise ApiError(409, "conflict", "Start the task first")
     values = (

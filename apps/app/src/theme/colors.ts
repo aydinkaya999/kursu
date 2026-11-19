@@ -1,4 +1,5 @@
 export const colors = {
+  scrim: "rgba(21,27,46,0.34)",
   ground: "#F2F5FC",
   surface: "#FFFFFF",
   ink: "#151B2E",

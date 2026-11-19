@@ -83,6 +83,11 @@ test("a guest completes onboarding, resumes the same question and receives a fir
   expect(second.id).toBe(first.id);
   await page.reload();
   await expect(page.getByText(second.question.stem)).toBeVisible();
+  const resultResponse = page.waitForResponse(
+    (r) =>
+      new URL(r.url()).pathname === `/v1/placement/${first.id}/result` &&
+      r.status() === 200,
+  );
   for (let n = 2; n <= 30; n++) {
     await expect(progress).toHaveAttribute("aria-valuenow", String(n));
     await page.getByRole("button", { name: tr.placement.blank }).click();
@@ -95,7 +100,14 @@ test("a guest completes onboarding, resumes the same question and receives a fir
     2,
   );
   await expect(page.getByText(tr.result.daily("90 dk"))).toBeVisible();
-  await expect(page.getByText(tr.result.mock("Pazar"))).toBeVisible();
+  const week = (await (await resultResponse).json()).first_week;
+  await expect(
+    page.getByText(
+      tr.result.mock(
+        tr.shared.weekdays[week.mock_day as keyof typeof tr.shared.weekdays],
+      ),
+    ),
+  ).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath("placement-result.png"),
   });

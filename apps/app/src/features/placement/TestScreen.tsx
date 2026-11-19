@@ -88,11 +88,13 @@ type Letter = keyof NonNullable<Attempt["question"]>["options"];
 const letters: readonly Letter[] = ["A", "B", "C", "D", "E"];
 export function Question({
   attempt,
+  title = t.title,
   question,
   onClose,
   onSubmit,
 }: {
-  attempt: Attempt;
+  attempt: Pick<Attempt, "position" | "total" | "subtest">;
+  title?: string;
   question: NonNullable<Attempt["question"]>;
   onClose: () => void;
   onSubmit: (data: Answer) => Promise<void>;
@@ -154,7 +156,7 @@ export function Question({
           onPress={onClose}
           disabled={busy}
         />
-        <Label variant="navTitle">{t.title}</Label>
+        <Label variant="navTitle">{title}</Label>
         <Pill label={t.count(attempt.position, attempt.total)} />
       </View>
       <View style={s.progress}>

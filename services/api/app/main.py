@@ -13,6 +13,7 @@ from app.modules.accounts.router import router as account_router
 from app.modules.content.router import router as catalogue_router
 from app.modules.placement.router import router as placement_router
 from app.modules.plan.router import router as plan_router
+from app.modules.practice.router import router as practice_router
 from app.modules.system.config import router as config_router
 from app.modules.system.router import router as system_router
 
@@ -70,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         access_router,
         placement_router,
         plan_router,
+        practice_router,
         config_router,
     ):
         application.include_router(router, prefix="/v1")

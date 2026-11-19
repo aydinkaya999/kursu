@@ -10,12 +10,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL
 from app.modules.content import models as content
-from app.modules.content.service import lesson_catalogue, mock_catalogue
+from app.modules.content.service import (
+    has_practice_feedback,
+    lesson_catalogue,
+    mock_catalogue,
+)
 from app.modules.placement.models import answers, attempts
 from app.modules.placement.service import expected_net, range_for
 from app.modules.plan.models import plans, tasks
 from app.modules.plan.rules import DAY, Topic, half_up
 from app.modules.plan.schemas import Priority
+from app.modules.practice.models import completions
+from app.modules.practice.models import mastery as topic_mastery
 
 
 @dataclass
@@ -62,12 +68,25 @@ async def read(
             .order_by(a.answered_at, a.id)
         )
     ).all()
-    mastery: dict[str, float] = defaultdict(float)
+    mastery = dict(
+        (
+            await db.execute(
+                select(topic_mastery.c.topic_id, topic_mastery.c.value).where(
+                    topic_mastery.c.user_id == user
+                )
+            )
+        )
+        .tuples()
+        .all()
+    )
     seen: set[str] = set()
     reviewed: dict[str, datetime] = {}
-    read_lessons: set[str] = set()
+    read_lessons = set(
+        await db.scalars(
+            select(completions.c.lesson_id).where(completions.c.user_id == user)
+        )
+    )
     done_mocks: set[str] = set()
-    lesson_events: list[tuple[datetime, str]] = []
     for item in work:
         ref = item["ref"]
         if item["state"] != "pending" and ref.get("topic_id"):
@@ -81,30 +100,18 @@ async def read(
                 )
         if item["type"] == "lesson":
             read_lessons.add(ref["content_id"])
-            lesson_events.append((item["completed_at"], ref["topic_id"]))
         if item["type"] == "mock":
             done_mocks.add(ref["content_id"])
     earliest: dict[str, date] = {}
-    events: list[tuple[datetime, str, float | None]] = [
-        (ts, topic, None) for ts, topic in lesson_events
-    ]
     for r in records:
         if r.selected_option is not None:
             seen.add(r.topic_id)
-            x = (0.5 if r.not_sure else 1.0) if r.is_correct else 0.0
-            events.append((r.answered_at, r.topic_id, x))
         if (r.is_correct is False or r.not_sure) and (
             r.objective_id not in reviewed or r.answered_at > reviewed[r.objective_id]
         ):
             due = r.answered_at.astimezone(ISTANBUL).date() + DAY
             if due <= day:
                 earliest.setdefault(r.objective_id, due)
-    for _, topic, outcome in sorted(events, key=lambda e: e[0]):
-        mastery[topic] = (
-            max(0.3, mastery[topic])
-            if outcome is None
-            else mastery[topic] + 0.2 * (outcome - mastery[topic])
-        )
     subtests = (
         (await db.execute(select(content.subtests).order_by(content.subtests.c.exam_order)))
         .mappings()
@@ -126,7 +133,7 @@ async def read(
         (
             await db.execute(
                 select(q.topic_id, func.count())
-                .where(q.status == "published")
+                .where(q.status == "published", has_practice_feedback())
                 .group_by(q.topic_id)
             )
         )
@@ -139,7 +146,7 @@ async def read(
         await db.execute(select(content.topics).order_by(content.topics.c.id))
     ).mappings():
         s = sections[t["subtest_id"]]
-        m = mastery[t["id"]]
+        m = mastery.get(t["id"], 0.0)
         values[t["subtest_id"]].append(m)
         topics.append(
             Topic(
@@ -148,7 +155,7 @@ async def read(
                 s["short_name"],
                 s["weight_p1"],
                 m,
-                t["id"] in seen,
+                t["id"] in seen or t["id"] in mastery,
                 lessons[t["id"]],
                 question_counts.get(t["id"], 0),
             )
