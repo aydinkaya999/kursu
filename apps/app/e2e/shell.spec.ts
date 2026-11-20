@@ -45,7 +45,9 @@ test("navigation supports real links, direct entry and browser back", async ({
   ).toHaveAttribute("aria-current", "page");
   await menu.getByRole("link", { name: tr.nav.mock }).click();
   await expect(page).toHaveURL(/\/mock$/);
-  await expect(page.getByRole("heading", { name: tr.nav.mock })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: tr.nav.mock, exact: true }),
+  ).toBeVisible();
   await page.goBack();
   await expect(
     page.getByRole("heading", { name: tr.nav.lessons }),

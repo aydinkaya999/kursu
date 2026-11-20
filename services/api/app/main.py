@@ -11,6 +11,7 @@ from app.core.settings import Settings
 from app.modules.accounts.access import router as access_router
 from app.modules.accounts.router import router as account_router
 from app.modules.content.router import router as catalogue_router
+from app.modules.mocks.router import router as mock_router
 from app.modules.notebook.router import router as notebook_router
 from app.modules.placement.router import router as placement_router
 from app.modules.plan.router import router as plan_router
@@ -62,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=[config.app_origin],
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
     application.include_router(system_router, prefix="/v1")
@@ -70,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in (
         account_router,
         access_router,
+        mock_router,
         notebook_router,
         placement_router,
         plan_router,

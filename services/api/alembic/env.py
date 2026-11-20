@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, pool
 from app.core.settings import Settings
 from app.modules.accounts import models as accounts  # noqa: F401 (register tables)
 from app.modules.content.models import metadata
+from app.modules.mocks import models as mocks  # noqa: F401 (register tables)
 from app.modules.notebook import models as notebook  # noqa: F401 (register tables)
 from app.modules.placement import models as placement  # noqa: F401 (register tables)
 from app.modules.plan import models as plan  # noqa: F401 (register tables)

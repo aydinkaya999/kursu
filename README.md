@@ -54,7 +54,7 @@ Settings supports daily minutes, an optional Istanbul notification time, the AI-
 
 Today opens a personal plan on the first visit of each Istanbul day. The server schedules due reviews, up to two five-minute lessons and a 10–15 question topic test within the selected budget. The configured mock day has one 110-minute exam. In the final 30 days, study days use due reviews and previously opened topics. Changing the daily minutes in Settings rebuilds the current plan and preserves completed work. An unfinished assignment from an earlier day can occupy a later study slot within that day's budget.
 
-Open a row or choose **Başla** to start the assigned activity. Completing the two lesson checks or the assigned topic test updates Today, the current streak and the weekly goal. The review task receives credit when its assigned notebook entries have graded review answers. The mock assignment uses **Görevi tamamla** until M8. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. Placement answers, practice answers and completed lessons contribute to planning.
+Open a row or choose **Başla** to start the assigned activity. Completing the two lesson checks or the assigned topic test updates Today, the current streak and the weekly goal. The review task receives credit when its assigned notebook entries have graded review answers. Submitting the assigned mock credits its plan task. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. Placement answers, practice answers, submitted mocks and completed lessons contribute to planning.
 
 For the API, use `GET /v1/plan/today`, `GET /v1/plan/tasks/{id}` and the task's `POST /start` and `POST /complete` operations. The server owns all dates, task estimates, state transitions, progress and streaks. Browser tests run against isolated schemas and a local test mailbox. The API's development email log and test mailbox require no mail service.
 
@@ -80,9 +80,15 @@ After answering, the chosen option's rationale appears first. Other rationales, 
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports and navigation at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports, mocks, progress and navigation at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
+
+## Mocks and progress
+
+Open **Deneme** to start or resume a timed or practice exam. Answers, flags and the current position are saved on the server. Submission makes the results and explanations available and updates mastery, the notebook and **Gelişim**. Publish additional mocks with the content importer.
+
+Schedule `pnpm jobs:submit-mocks` every minute in the deployment environment. The command submits expired exams at their original deadline and is safe to repeat. Reopening an expired exam also finalizes it.
 
 ## Content and catalogue
 
@@ -116,4 +122,4 @@ ON CONFLICT (user_id, kind) DO UPDATE SET valid_until = EXCLUDED.valid_until;
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md) · [M8 mock exams](.agent/plans/M8-mock-exams.md)

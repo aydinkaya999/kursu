@@ -20,6 +20,91 @@ export type ApiDocument = {
         "title": "Advance",
         "type": "object"
       },
+      "Attempt": {
+        "properties": {
+          "blank": {
+            "title": "Blank",
+            "type": "integer"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/Slot"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "remaining_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remaining Seconds"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "mode",
+          "position",
+          "started_at",
+          "deadline_at",
+          "submitted_at",
+          "remaining_seconds",
+          "blank",
+          "questions"
+        ],
+        "title": "Attempt",
+        "type": "object"
+      },
       "Breakdown": {
         "properties": {
           "asked": {
@@ -315,6 +400,36 @@ export type ApiDocument = {
           "status"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "History": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "net": {
+            "title": "Net",
+            "type": "number"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "submitted_at",
+          "net"
+        ],
+        "title": "History",
         "type": "object"
       },
       "Kind": {
@@ -665,6 +780,13 @@ export type ApiDocument = {
         ],
         "title": "MockSummary",
         "type": "object"
+      },
+      "Mode": {
+        "enum": [
+          "timed",
+          "practice"
+        ],
+        "type": "string"
       },
       "NetRange": {
         "properties": {
@@ -1078,6 +1200,21 @@ export type ApiDocument = {
         "title": "PlanTask",
         "type": "object"
       },
+      "Position": {
+        "properties": {
+          "position": {
+            "maximum": 80.0,
+            "minimum": 1.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "Position",
+        "type": "object"
+      },
       "Practice": {
         "properties": {
           "feedback": {
@@ -1335,6 +1472,86 @@ export type ApiDocument = {
         "title": "ProfileInput",
         "type": "object"
       },
+      "Progress": {
+        "properties": {
+          "days_to_exam": {
+            "title": "Days To Exam",
+            "type": "integer"
+          },
+          "detailed": {
+            "title": "Detailed",
+            "type": "boolean"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/History"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "net_change": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Change"
+          },
+          "net_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NetRange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionProgress"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "streak": {
+            "title": "Streak",
+            "type": "integer"
+          },
+          "trend": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Trend",
+            "type": "array"
+          },
+          "weekly_done": {
+            "title": "Weekly Done",
+            "type": "integer"
+          },
+          "weekly_goal": {
+            "title": "Weekly Goal",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "days_to_exam",
+          "net_range",
+          "net_change",
+          "trend",
+          "sections",
+          "history",
+          "streak",
+          "weekly_done",
+          "weekly_goal",
+          "detailed"
+        ],
+        "title": "Progress",
+        "type": "object"
+      },
       "Provider": {
         "enum": [
           "google",
@@ -1554,6 +1771,99 @@ export type ApiDocument = {
         "title": "ReportReceipt",
         "type": "object"
       },
+      "Result": {
+        "properties": {
+          "blank": {
+            "default": 0,
+            "title": "Blank",
+            "type": "integer"
+          },
+          "correct": {
+            "default": 0,
+            "title": "Correct",
+            "type": "integer"
+          },
+          "duration_minutes": {
+            "title": "Duration Minutes",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "net": {
+            "default": 0,
+            "title": "Net",
+            "type": "number"
+          },
+          "priorities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Priorities",
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionScore"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "used_minutes": {
+            "title": "Used Minutes",
+            "type": "integer"
+          },
+          "withdrawn": {
+            "title": "Withdrawn",
+            "type": "integer"
+          },
+          "wrong": {
+            "default": 0,
+            "title": "Wrong",
+            "type": "integer"
+          },
+          "wrong_topics": {
+            "items": {
+              "$ref": "#/components/schemas/WrongTopic"
+            },
+            "title": "Wrong Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "submitted_at",
+          "mode",
+          "used_minutes",
+          "duration_minutes",
+          "total",
+          "withdrawn",
+          "sections",
+          "wrong_topics",
+          "priorities"
+        ],
+        "title": "Result",
+        "type": "object"
+      },
       "ReviewStart": {
         "additionalProperties": false,
         "properties": {
@@ -1611,6 +1921,97 @@ export type ApiDocument = {
         "title": "ReviewStart",
         "type": "object"
       },
+      "ReviewedQuestion": {
+        "properties": {
+          "correct": {
+            "$ref": "#/components/schemas/Letter"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/UnansweredQuestion"
+          },
+          "rationales": {
+            "items": {
+              "$ref": "#/components/schemas/Rationale"
+            },
+            "title": "Rationales",
+            "type": "array"
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Letter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LawSource"
+              },
+              {
+                "$ref": "#/components/schemas/LessonSource"
+              },
+              {
+                "$ref": "#/components/schemas/NotesSource"
+              }
+            ],
+            "title": "Source"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/SolutionStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "position",
+          "question",
+          "selected",
+          "correct",
+          "rationales",
+          "source",
+          "steps"
+        ],
+        "title": "ReviewedQuestion",
+        "type": "object"
+      },
+      "Save": {
+        "additionalProperties": false,
+        "properties": {
+          "flagged": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged"
+          },
+          "selected_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Letter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "Save",
+        "type": "object"
+      },
       "ScoreType": {
         "enum": [
           "P1",
@@ -1618,6 +2019,65 @@ export type ApiDocument = {
           "P3"
         ],
         "type": "string"
+      },
+      "SectionProgress": {
+        "properties": {
+          "mastery_percent": {
+            "title": "Mastery Percent",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/TopicProgress"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "mastery_percent",
+          "topics"
+        ],
+        "title": "SectionProgress",
+        "type": "object"
+      },
+      "SectionScore": {
+        "properties": {
+          "blank": {
+            "default": 0,
+            "title": "Blank",
+            "type": "integer"
+          },
+          "correct": {
+            "default": 0,
+            "title": "Correct",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "net": {
+            "default": 0,
+            "title": "Net",
+            "type": "number"
+          },
+          "wrong": {
+            "default": 0,
+            "title": "Wrong",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SectionScore",
+        "type": "object"
       },
       "ServiceUnavailable": {
         "properties": {
@@ -1644,6 +2104,51 @@ export type ApiDocument = {
         "title": "ServiceUnavailable",
         "type": "object"
       },
+      "Slot": {
+        "properties": {
+          "flagged": {
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UnansweredQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selected_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Letter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subtest": {
+            "title": "Subtest",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "subtest",
+          "question",
+          "selected_option",
+          "flagged"
+        ],
+        "title": "Slot",
+        "type": "object"
+      },
       "SolutionStep": {
         "properties": {
           "text": {
@@ -1660,16 +2165,6 @@ export type ApiDocument = {
           "text"
         ],
         "title": "SolutionStep",
-        "type": "object"
-      },
-      "Start": {
-        "properties": {
-          "kind": {
-            "$ref": "#/components/schemas/Kind",
-            "default": "full"
-          }
-        },
-        "title": "Start",
         "type": "object"
       },
       "StudyLesson": {
@@ -2057,6 +2552,23 @@ export type ApiDocument = {
         "title": "Topic",
         "type": "object"
       },
+      "TopicProgress": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/MasteryState"
+          }
+        },
+        "required": [
+          "name",
+          "state"
+        ],
+        "title": "TopicProgress",
+        "type": "object"
+      },
       "UnansweredQuestion": {
         "properties": {
           "id": {
@@ -2145,6 +2657,46 @@ export type ApiDocument = {
           "mock_day"
         ],
         "title": "WeekPreview",
+        "type": "object"
+      },
+      "WrongTopic": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "count"
+        ],
+        "title": "WrongTopic",
+        "type": "object"
+      },
+      "app__modules__mocks__schemas__Start": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "Start",
+        "type": "object"
+      },
+      "app__modules__placement__schemas__Start": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind",
+            "default": "full"
+          }
+        },
+        "title": "Start",
         "type": "object"
       }
     },
@@ -3788,6 +4340,647 @@ export type ApiDocument = {
         ]
       }
     },
+    "/v1/mock-attempts/{id}": {
+      "get": {
+        "operationId": "getMockAttempt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-attempts/{id}/answers/{question_id}": {
+      "put": {
+        "operationId": "saveMockAnswer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "question_id",
+            "required": true,
+            "schema": {
+              "title": "Question Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Save"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-attempts/{id}/position": {
+      "put": {
+        "operationId": "moveMock",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Position"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Move",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-attempts/{id}/result": {
+      "get": {
+        "operationId": "mockResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Result",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-attempts/{id}/review": {
+      "get": {
+        "operationId": "mockReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewedQuestion"
+                  },
+                  "title": "Response Mockreview",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Review",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-attempts/{id}/submit": {
+      "post": {
+        "operationId": "submitMock",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/mock-history": {
+      "get": {
+        "operationId": "mockHistory",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/History"
+                  },
+                  "title": "Response Mockhistory",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "History",
+        "tags": [
+          "Mocks and progress"
+        ]
+      }
+    },
     "/v1/mocks": {
       "get": {
         "operationId": "listMocks",
@@ -3810,6 +5003,103 @@ export type ApiDocument = {
         "summary": "List Mocks",
         "tags": [
           "Catalogue"
+        ]
+      }
+    },
+    "/v1/mocks/{id}/attempts": {
+      "post": {
+        "operationId": "startMock",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__mocks__schemas__Start"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attempt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start",
+        "tags": [
+          "Mocks and progress"
         ]
       }
     },
@@ -3917,7 +5207,7 @@ export type ApiDocument = {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Start"
+                "$ref": "#/components/schemas/app__modules__placement__schemas__Start"
               }
             }
           },
@@ -5061,6 +6351,82 @@ export type ApiDocument = {
         "summary": "Finish",
         "tags": [
           "Study"
+        ]
+      }
+    },
+    "/v1/progress": {
+      "get": {
+        "operationId": "getProgress",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Progress"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Progress",
+        "tags": [
+          "Mocks and progress"
         ]
       }
     },

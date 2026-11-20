@@ -15,6 +15,7 @@ from app.modules.content.service import (
     lesson_catalogue,
     mock_catalogue,
 )
+from app.modules.mocks.models import attempts as mock_attempts
 from app.modules.notebook import reviews
 from app.modules.notebook import service as notebook
 from app.modules.placement.models import answers, attempts
@@ -35,6 +36,7 @@ class Evidence:
     priorities: list[Priority]
     net_range: tuple[int, int] | None
     net_change: int | None
+    trend: list[float]
 
 
 async def history(db: AsyncSession, user: UUID) -> list[RowMapping]:
@@ -129,7 +131,13 @@ async def read(
             select(completions.c.lesson_id).where(completions.c.user_id == user)
         )
     )
-    done_mocks: set[str] = set()
+    done_mocks = set(
+        await db.scalars(
+            select(mock_attempts.c.mock_exam_id).where(
+                mock_attempts.c.user_id == user, mock_attempts.c.submitted_at.is_not(None)
+            )
+        )
+    )
     for item in work:
         ref = item["ref"]
         if item["state"] != "pending" and ref.get("topic_id"):
@@ -217,6 +225,7 @@ async def read(
         .where(attempts.c.user_id == user, attempts.c.state == "completed")
         .limit(1)
     )
+    completed = completed or bool(done_mocks)
     current_range = (
         range_for(
             recent if recent is not None else expected_net(counts, {}, {}),
@@ -238,4 +247,10 @@ async def read(
         priorities,
         current_range,
         delta,
+        [
+            float(value)
+            for week in range(4, 0, -1)
+            if (value := net(now - timedelta(weeks=week), now - timedelta(weeks=week - 1)))
+            is not None
+        ],
     )

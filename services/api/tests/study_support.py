@@ -50,4 +50,14 @@ def finish_task(c: TestClient, auth: dict[str, str], task: dict[str, Any]) -> No
             response.raise_for_status()
             state = response.json()
         c.post(url + "/finish", headers=auth).raise_for_status()
+    if task["state"] != "done" and task["kind"] == "mock":
+        result = c.post(
+            "/v1/mocks/" + task["content_id"] + "/attempts",
+            headers=auth,
+            json={"mode": "timed"},
+        )
+        result.raise_for_status()
+        c.post(
+            "/v1/mock-attempts/" + result.json()["id"] + "/submit", headers=auth
+        ).raise_for_status()
     c.post(path + "/complete", headers=auth).raise_for_status()

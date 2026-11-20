@@ -18,6 +18,7 @@ function type(
   return { fontSize, lineHeight, weight, letterSpacing };
 }
 export const typography = {
+  timerDigits: type(20, 24, 800),
   notebookTitle: type(22, 28, 800, -0.22),
   notebookStatus: type(16, 21, 800),
   notebookHint: type(12.5, 18, 400),

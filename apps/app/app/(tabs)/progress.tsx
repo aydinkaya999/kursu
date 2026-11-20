@@ -1,4 +1,1 @@
-import { DestinationScreen } from "../../src/components/DestinationScreen";
-export default function Progress() {
-  return <DestinationScreen destination="progress" />;
-}
+export { default } from "../../src/features/mocks/Progress";

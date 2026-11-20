@@ -47,6 +47,7 @@ answers = Table(
     Column("user_id", Uuid, ForeignKey("users.id"), nullable=False, index=True),
     Column("placement_id", Uuid, ForeignKey("placement_attempts.id")),
     Column("practice_id", Uuid, ForeignKey("practice_sessions.id", ondelete="CASCADE")),
+    Column("mock_id", Uuid, ForeignKey("mock_attempts.id", ondelete="CASCADE")),
     Column("misconception_id", Text, ForeignKey("misconceptions.id")),
     Column("notebook_key", Text),
     Column("notebook_order", BigInteger, Identity(), nullable=False),
@@ -63,10 +64,11 @@ answers = Table(
     UniqueConstraint("user_id", "client_answer_id"),
     UniqueConstraint("placement_id", "position"),
     UniqueConstraint("placement_id", "question_id"),
+    UniqueConstraint("mock_id", "position", name="uq_graded_mock_position"),
     UniqueConstraint("practice_id", "position", name="uq_practice_position"),
     UniqueConstraint("practice_id", "question_id", name="uq_practice_question"),
     CheckConstraint(
-        "num_nonnulls(placement_id, practice_id) = 1", name="ck_answer_session"
+        "num_nonnulls(placement_id, practice_id, mock_id) = 1", name="ck_answer_session"
     ),
     CheckConstraint("selected_option IN ('A','B','C','D','E')", name="ck_answer_option"),
 )

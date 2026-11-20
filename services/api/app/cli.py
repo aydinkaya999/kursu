@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 from sqlalchemy.exc import DBAPIError
 
 from app.core.db import Database
+from app.core.http import server_now
 from app.core.settings import Settings
 from app.modules.content.bundle import (
     SAMPLE_FILE,
@@ -19,6 +20,7 @@ from app.modules.content.bundle import (
 )
 from app.modules.content.importer import import_bundle
 from app.modules.content.placeholders import make_placeholders
+from app.modules.mocks.service import submit_expired
 
 
 async def import_documents(settings: Settings, documents: Iterable[object]) -> None:
@@ -31,7 +33,19 @@ async def import_documents(settings: Settings, documents: Iterable[object]) -> N
         await database.engine.dispose()
 
 
+async def expire(settings: Settings) -> int:
+    database = Database(settings.database_url)
+    try:
+        async with database.sessions() as db:
+            return await submit_expired(db, server_now())
+    finally:
+        await database.engine.dispose()
+
+
 def run(args: argparse.Namespace, settings: Settings) -> None:
+    if args.command == "submit-expired-mocks":
+        print(f"Submitted {asyncio.run(expire(settings))} expired attempts.")
+        return
     if args.command == "make-placeholders":
         if settings.production:
             raise ContentError("production refuses placeholders")
@@ -55,6 +69,7 @@ def run(args: argparse.Namespace, settings: Settings) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("submit-expired-mocks", help="submit due timed mocks")
     importer = commands.add_parser(
         "import-content", help="validate and upsert offline JSON"
     )
@@ -70,7 +85,8 @@ def main() -> None:
         parser.exit(1, f"{error}\n")
     except DBAPIError as error:
         parser.exit(1, f"Database rejected the import: {error.orig}\n")
-    print("Content ready.")
+    if args.command != "submit-expired-mocks":
+        print("Content ready.")
 
 
 if __name__ == "__main__":

@@ -1,18 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Screen, Button, Label } from "../../components/Core";
 import { tr } from "../../i18n/tr";
 import { RequestFailure } from "../../lib/session";
 import { formatDuration } from "../../lib/format";
-import { Status } from "../placement/Status";
 import { startPractice } from "../study/api";
 import { StudyStatus } from "../study/StudyStatus";
-import { getTask, taskAction } from "./api";
+import { getTask } from "./api";
 import { describe } from "./tasks";
 
 export default function TaskDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>(),
-    cache = useQueryClient();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const q = useQuery({
     queryKey: ["task", id],
     queryFn: () => getTask(id),
@@ -43,18 +41,6 @@ export default function TaskDetail() {
     refetchOnWindowFocus: false,
   });
   const back = () => router.dismissTo("/today");
-  const complete = useMutation({
-    networkMode: "always",
-    mutationFn: async () => {
-      if (task?.state === "pending") await taskAction(id, "start");
-      return taskAction(id, "complete");
-    },
-    onSuccess: async (value) => {
-      cache.setQueryData(["task", id], value);
-      await cache.invalidateQueries({ queryKey: ["today"] });
-      back();
-    },
-  });
   if (!task || q.error)
     return (
       <StudyStatus
@@ -70,6 +56,12 @@ export default function TaskDetail() {
           pathname: "/lessons/[lessonId]",
           params: { lessonId: task.content_id, task: id, from: "today" },
         }}
+      />
+    );
+  if (task.kind === "mock" && task.state !== "done" && task.content_id)
+    return (
+      <Redirect
+        href={{ pathname: "/mock", params: { exam: task.content_id } }}
       />
     );
   if (practiceTask) {
@@ -100,18 +92,7 @@ export default function TaskDetail() {
   const summary = describe(task);
   return (
     <Screen
-      footer={
-        <>
-          <Button variant="secondary" label={tr.nav.back} onPress={back} />
-          {task.state !== "done" && (
-            <Button
-              label={tr.today.finish}
-              disabled={complete.isPending}
-              onPress={() => complete.mutate()}
-            />
-          )}
-        </>
-      }
+      footer={<Button variant="secondary" label={tr.nav.back} onPress={back} />}
     >
       <Label accessibilityRole="header" variant="h1">
         {summary.title}
@@ -120,9 +101,6 @@ export default function TaskDetail() {
         {summary.meta} · {formatDuration(task.minutes)}
       </Label>
       {task.state === "done" && <Label>{tr.today.finished}</Label>}
-      {complete.error && (
-        <Status error={complete.error} retry={() => complete.mutate()} />
-      )}
     </Screen>
   );
 }

@@ -236,7 +236,9 @@ async def sync_streak(db: AsyncSession, user: UUID, day: date) -> tuple[rules.St
     ).all()
     complete = any(r.plan_date == day and r.completed_at for r in days)
     stats = rules.streak(
-        days[0].plan_date, day, (r.plan_date for r in days if r.completed_at)
+        days[0].plan_date if days else day,
+        day,
+        (r.plan_date for r in days if r.completed_at),
     )
     values = dict(
         current=stats.current,
@@ -399,24 +401,18 @@ async def task_action(
         raise ApiError(409, "conflict", "Task is no longer current")
     if action == "start" and row["type"] == "review":
         await require_pass(db, user, now.astimezone(ISTANBUL).date())
-    if action == "complete" and row["type"] in ("lesson", "topic_test", "review"):
+    if action == "complete":
         raise ApiError(409, "conflict", "Finish the study session to complete this task")
-    if action == "complete" and row["state"] == "pending":
-        raise ApiError(409, "conflict", "Start the task first")
-    values = (
-        dict(state="done", completed_at=now)
-        if action == "complete"
-        else dict(state="started")
-    )
     saved = (
         (
             await db.execute(
-                update(tasks).where(tasks.c.id == task_id).values(**values).returning(tasks)
+                update(tasks)
+                .where(tasks.c.id == task_id)
+                .values(state="started")
+                .returning(tasks)
             )
         )
         .mappings()
         .one()
     )
-    if action == "complete":
-        await credit(db, row["plan_id"], now)
     return display(saved, None)
