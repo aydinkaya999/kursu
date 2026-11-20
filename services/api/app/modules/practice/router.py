@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.core.http import ErrorBody, ServerTime, Session
 from app.modules.accounts.security import CurrentUser
+from app.modules.notebook.schemas import ReviewStart
 from app.modules.placement.schemas import Submission
 from app.modules.placement.service import lock_user
 from app.modules.practice import catalogue, moderation, service
@@ -18,7 +19,8 @@ from app.modules.practice.schemas import (
 )
 
 router = APIRouter(
-    tags=["Study"], responses={code: {"model": ErrorBody} for code in (401, 404, 409, 422)}
+    tags=["Study"],
+    responses={code: {"model": ErrorBody} for code in (401, 403, 404, 409, 422)},
 )
 
 
@@ -29,7 +31,7 @@ async def library(db: Session, user: CurrentUser) -> list[StudySection]:
 
 @router.post("/practice-sessions", operation_id="startPractice")
 async def start(
-    data: PracticeStart, db: Session, user: CurrentUser, now: ServerTime
+    data: PracticeStart | ReviewStart, db: Session, user: CurrentUser, now: ServerTime
 ) -> Practice:
     await lock_user(db, user)
     result = await service.start(db, user, data, now)
@@ -38,9 +40,11 @@ async def start(
 
 
 @router.get("/practice-sessions/{id}", operation_id="getPractice")
-async def get_session(id: UUID, db: Session, user: CurrentUser) -> Practice:
+async def get_session(
+    id: UUID, db: Session, user: CurrentUser, now: ServerTime
+) -> Practice:
     await lock_user(db, user)
-    result = await service.presented(db, user, id)
+    result = await service.presented(db, user, id, now)
     await db.commit()
     return result
 
@@ -56,9 +60,11 @@ async def answer(
 
 
 @router.post("/practice-sessions/{id}/advance", operation_id="advancePractice")
-async def advance(id: UUID, data: Advance, db: Session, user: CurrentUser) -> Practice:
+async def advance(
+    id: UUID, data: Advance, db: Session, user: CurrentUser, now: ServerTime
+) -> Practice:
     await lock_user(db, user)
-    result = await service.advance(db, user, id, data.question_id)
+    result = await service.advance(db, user, id, data.question_id, now)
     await db.commit()
     return result
 

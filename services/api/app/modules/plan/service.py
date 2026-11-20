@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.http import ISTANBUL, ApiError
 from app.modules.accounts.models import profiles
 from app.modules.content.models import remote_config
+from app.modules.notebook.service import require_pass
 from app.modules.placement.service import lock_user
 from app.modules.plan import evidence, rules
 from app.modules.plan.models import plans, streaks, tasks
@@ -82,7 +83,14 @@ async def carry_forward(
     return selected, deferred
 
 
-def still_available(scheduled: list[RowMapping], inputs: evidence.Evidence) -> bool:
+def still_available(
+    scheduled: list[RowMapping], inputs: evidence.Evidence, review_limit: int
+) -> bool:
+    review = next((t for t in scheduled if t["included"] and t["type"] == "review"), None)
+    if not any(t["type"] == "review" and t["state"] == "done" for t in scheduled):
+        assigned = review["ref"].get("entry_keys", []) if review else []
+        if assigned != inputs.due[:review_limit]:
+            return False
     lessons = {id for t in inputs.topics for id, _ in t.lessons}
     counts = {t.id: t.questions for t in inputs.topics}
     for task in scheduled:
@@ -128,7 +136,16 @@ async def build_plan(
         plan
         and not plan["needs_rebuild"]
         and plan["daily_minutes"] == prefs.daily_minutes
-        and still_available(scheduled, inputs)
+        and still_available(
+            scheduled,
+            inputs,
+            rules.review_capacity(
+                prefs.daily_minutes,
+                sum(t["est_quarters"] for t in scheduled if t["state"] == "done"),
+            )
+            if day < exam and day.weekday() != mock and not plan["completed_at"]
+            else 0,
+        )
     ):
         return plan, inputs, exam, mock
     if plan is None:
@@ -204,6 +221,7 @@ async def build_plan(
             await db.execute(
                 update(tasks).where(tasks.c.id == carry["id"]).values(carried_on=day)
             )
+    await credit_reviews(db, user, now)
     await credit(db, plan["id"], now)
     return plan, inputs, exam, mock
 
@@ -255,6 +273,32 @@ async def credit(db: AsyncSession, plan_id: UUID, now: datetime) -> None:
         )
         if owner:
             await sync_streak(db, owner, now.astimezone(ISTANBUL).date())
+
+
+async def credit_reviews(db: AsyncSession, user: UUID, now: datetime) -> None:
+    day = now.astimezone(ISTANBUL).date()
+    row = (
+        await db.execute(
+            select(tasks.c.id, tasks.c.plan_id, tasks.c.ref)
+            .join_from(tasks, plans)
+            .where(
+                plans.c.user_id == user,
+                plans.c.plan_date == day,
+                tasks.c.type == "review",
+                tasks.c.included,
+                tasks.c.state != "done",
+            )
+        )
+    ).one_or_none()
+    if (
+        row
+        and row.ref.get("entry_keys")
+        and set(row.ref["entry_keys"]) <= await evidence.graded_today(db, user, day)
+    ):
+        await db.execute(
+            update(tasks).where(tasks.c.id == row.id).values(state="done", completed_at=now)
+        )
+        await credit(db, row.plan_id, now)
 
 
 async def recompute_existing(db: AsyncSession, user: UUID, now: datetime) -> None:
@@ -353,7 +397,9 @@ async def task_action(
         return display(row, None)
     if not row["included"] or row["plan_date"] != now.astimezone(ISTANBUL).date():
         raise ApiError(409, "conflict", "Task is no longer current")
-    if action == "complete" and row["type"] in ("lesson", "topic_test"):
+    if action == "start" and row["type"] == "review":
+        await require_pass(db, user, now.astimezone(ISTANBUL).date())
+    if action == "complete" and row["type"] in ("lesson", "topic_test", "review"):
         raise ApiError(409, "conflict", "Finish the study session to complete this task")
     if action == "complete" and row["state"] == "pending":
         raise ApiError(409, "conflict", "Start the task first")

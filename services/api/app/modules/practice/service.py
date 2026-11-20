@@ -7,13 +7,20 @@ from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL, ApiError
+from app.modules.accounts.models import profiles
 from app.modules.content import models as content
 from app.modules.content.schemas import UnansweredQuestion
 from app.modules.content.service import has_practice_feedback, lesson_catalogue
+from app.modules.notebook import reviews
+from app.modules.notebook import rules as notebook_rules
+from app.modules.notebook import service as notebook
+from app.modules.notebook.models import entries
+from app.modules.notebook.schemas import ReviewStart
 from app.modules.placement.models import answers
 from app.modules.placement.schemas import Submission
 from app.modules.placement.service import visible
 from app.modules.plan import service as plan
+from app.modules.plan.evidence import graded_today
 from app.modules.plan.models import plans, tasks
 from app.modules.practice import learning
 from app.modules.practice.bank import topic_questions
@@ -21,7 +28,7 @@ from app.modules.practice.models import completions, sessions
 from app.modules.practice.schemas import Feedback, Practice, PracticeStart
 
 
-async def load(db: AsyncSession, user: UUID, key: UUID) -> RowMapping:
+async def load(db: AsyncSession, user: UUID, key: UUID, now: datetime) -> RowMapping:
     row = (
         (
             await db.execute(
@@ -36,6 +43,8 @@ async def load(db: AsyncSession, user: UUID, key: UUID) -> RowMapping:
     )
     if row is None:
         raise ApiError(404, "not_found", "Practice session not found")
+    if row["kind"] == "review":
+        await notebook.require_pass(db, user, now.astimezone(ISTANBUL).date())
     return row
 
 
@@ -74,50 +83,103 @@ async def require_current_lesson(db: AsyncSession, row: RowMapping) -> None:
         raise ApiError(409, "content_unavailable", "The lesson or its checks have changed")
 
 
-async def presented(db: AsyncSession, user: UUID, key: UUID) -> Practice:
-    row = await load(db, user, key)
+async def current_question(db: AsyncSession, row: RowMapping) -> RowMapping | None:
+    user = row["user_id"]
     ids = list(row["question_ids"])
-    result = Practice.model_validate({**row, "total": len(ids)})
-    if result.state in ("ready", "completed"):
-        return result
+    pos = row["position"] - 1
     q = content.questions.c
-    pos = result.position - 1
     await require_current_lesson(db, row)
-    eligible = select(q.id, q.stem, q.options).where(
-        q.status.in_(visible(user)), has_practice_feedback()
+    eligible = (
+        select(
+            q.id,
+            q.stem,
+            q.options,
+            q.topic_id,
+            q.objective_id,
+            content.subtests.c.short_name,
+        )
+        .join_from(
+            content.questions, content.subtests, q.subtest_id == content.subtests.c.id
+        )
+        .where(q.status.in_(visible(user)), has_practice_feedback())
     )
     item = (await db.execute(eligible.where(q.id == ids[pos]))).mappings().one_or_none()
-    if item is None:
-        if result.state == "feedback":
-            await move(db, row)
-            return await presented(db, user, key)
+    if row["state"] == "feedback":
+        return item
+    if row["kind"] == "review":
+        target = await reviews.target(db, row)
+        if target is None:
+            return None
+        objective, first = target["objective_id"], target["first_question_id"]
+        if item and item["id"] != first and item["objective_id"] == objective:
+            return item
+        candidates = await reviews.bank(db, user, [objective])
+        replacement = reviews.sibling(candidates[objective], first, ids)
+        if replacement is None:
+            return None
+        query = eligible.where(q.id == replacement, q.objective_id == objective)
+    else:
+        if item:
+            return item
         old_level = select(q.difficulty).where(q.id == ids[pos]).scalar_subquery()
-        item = (
-            (
-                await db.execute(
-                    eligible.where(q.topic_id == row["topic_id"], q.id.not_in(ids))
-                    .order_by(func.abs(q.difficulty - old_level), q.is_placeholder, q.id)
-                    .limit(1)
-                )
-            )
-            .mappings()
-            .one_or_none()
+        query = (
+            eligible.where(q.topic_id == row["topic_id"], q.id.not_in(ids))
+            .order_by(func.abs(q.difficulty - old_level), q.is_placeholder, q.id)
+            .limit(1)
         )
-        if item is None:
-            raise ApiError(409, "content_unavailable", "No eligible replacement question")
-        ids[pos] = item["id"]
-        await db.execute(
-            update(sessions).where(sessions.c.id == key).values(question_ids=ids)
-        )
+    item = (await db.execute(query)).mappings().one_or_none()
+    if item is None:
+        if row["kind"] == "review":
+            return None
+        raise ApiError(409, "content_unavailable", "No eligible replacement question")
+    ids[pos] = item["id"]
+    await db.execute(
+        update(sessions).where(sessions.c.id == row["id"]).values(question_ids=ids)
+    )
+    return item
+
+
+async def presented(db: AsyncSession, user: UUID, key: UUID, now: datetime) -> Practice:
+    while True:
+        row = await load(db, user, key, now)
+        result = Practice.model_validate({**row, "total": len(row["question_ids"])})
+        if result.state in ("ready", "completed"):
+            return result
+        item = await current_question(db, row)
+        if item is not None:
+            break
+        # Withdrawn feedback and review slots without a current sibling earn no new credit.
+        await move(db, row)
+    result.topic_id = item["topic_id"]
+    result.subtest = item["short_name"]
     if result.state == "question":
         result.question = UnansweredQuestion.model_validate(item)
     else:
-        saved = await db.scalar(
-            select(answers.c.feedback).where(
-                answers.c.practice_id == key, answers.c.position == result.position
+        saved = (
+            await db.execute(
+                select(answers.c.feedback, answers.c.notebook_key).where(
+                    answers.c.practice_id == key, answers.c.position == result.position
+                )
             )
-        )
-        result.feedback = Feedback.model_validate(saved)
+        ).one()
+        result.feedback = Feedback.model_validate(saved.feedback)
+        if saved.notebook_key:
+            entry = (
+                (
+                    await db.execute(
+                        select(entries).where(
+                            entries.c.user_id == user,
+                            entries.c.entry_key == saved.notebook_key,
+                        )
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            day = now.astimezone(ISTANBUL).date()
+            due = notebook.schedule(entry).effective_due(await notebook.calendar(db), day)
+            result.feedback.notebook_learned = due is None
+            result.feedback.notebook_due_days = max(0, (due - day).days) if due else None
         if row["lesson_id"] and not result.feedback.is_correct:
             checks = content.lesson_check_questions.c
             result.feedback.card_position = await db.scalar(
@@ -135,8 +197,26 @@ async def presented(db: AsyncSession, user: UUID, key: UUID) -> Practice:
 
 
 async def start(
-    db: AsyncSession, user: UUID, data: PracticeStart, now: datetime
+    db: AsyncSession, user: UUID, data: PracticeStart | ReviewStart, now: datetime
 ) -> Practice:
+    if isinstance(data, ReviewStart):
+        day = now.astimezone(ISTANBUL).date()
+        await notebook.require_pass(db, user, day)
+        assigned = None
+        if data.task_id:
+            review_task = await plan.task_action(db, user, data.task_id, now, "start")
+            if review_task.kind != "review":
+                raise ApiError(409, "conflict", "Assignment is not a review")
+            if review_task.state == "done":
+                raise ApiError(409, "conflict", "Assignment already completed")
+            ref = await db.scalar(select(tasks.c.ref).where(tasks.c.id == data.task_id))
+            assert ref is not None
+            graded = await graded_today(db, user, day)
+            assigned = [k for k in ref["entry_keys"] if k not in graded]
+        elif await db.scalar(select(profiles.c.user_id).where(profiles.c.user_id == user)):
+            await plan.build_plan(db, user, now)
+        review_id = await reviews.start(db, user, data, now, assigned)
+        return await presented(db, user, review_id, now)
     lesson = data.kind == "lesson_check"
     topic_id = data.content_id
     task = None
@@ -182,7 +262,7 @@ async def start(
             .limit(1)
         )
         if existing:
-            return await presented(db, user, existing)
+            return await presented(db, user, existing, now)
     if task and not lesson:
         resume = resume.where(func.jsonb_array_length(s.question_ids) == task.count)
     if data.task_id:
@@ -195,7 +275,7 @@ async def start(
             await db.execute(
                 update(sessions).where(s.id == existing).values(task_id=data.task_id)
             )
-        return await presented(db, user, existing)
+        return await presented(db, user, existing, now)
     if not lesson:
         ids = await topic_questions(db, user, topic_id, task.count if task else 10)
     key = uuid4()
@@ -213,7 +293,7 @@ async def start(
             started_at=now,
         )
     )
-    return await presented(db, user, key)
+    return await presented(db, user, key, now)
 
 
 async def make_feedback(
@@ -280,7 +360,7 @@ async def make_feedback(
 async def answer(
     db: AsyncSession, user: UUID, key: UUID, data: Submission, now: datetime
 ) -> Practice:
-    row = await load(db, user, key)
+    row = await load(db, user, key, now)
     a = answers.c
     previous = (
         (
@@ -301,7 +381,7 @@ async def answer(
             previous["not_sure"],
         ) != (key, data.question_id, data.selected_option, data.not_sure):
             raise ApiError(409, "conflict", "Answer ID already used for another submission")
-        return await presented(db, user, key)
+        return await presented(db, user, key, now)
     if (
         row["state"] != "question"
         or row["question_ids"][row["position"] - 1] != data.question_id
@@ -328,6 +408,25 @@ async def answer(
     choice = data.selected_option
     correct = choice == q["correct_option"] if choice else None
     key_answer = uuid4()
+    is_review = row["kind"] == "review"
+    misconception = (
+        q["rationales"][choice].get("misconception_id")
+        if choice and correct is False
+        else None
+    )
+    entry = None
+    if is_review:
+        target = await reviews.target(db, row)
+        if (
+            target is None
+            or target["objective_id"] != q["objective_id"]
+            or target["first_question_id"] == q["id"]
+        ):
+            raise ApiError(409, "conflict", "This review entry has changed")
+        if choice or data.not_sure:
+            entry = target["entry_key"]
+    elif notebook_rules.qualifies(correct, data.not_sure):
+        entry = notebook_rules.entry_key(q["objective_id"], misconception)
     await db.execute(
         insert(answers).values(
             id=key_answer,
@@ -337,13 +436,19 @@ async def answer(
             topic_id=q["topic_id"],
             subtest_id=q["subtest_id"],
             is_correct=correct,
-            misconception_id=q["rationales"][choice].get("misconception_id")
-            if choice and correct is False
-            else None,
+            misconception_id=misconception,
+            notebook_key=entry,
             answered_at=now,
             **data.model_dump(),
         )
     )
+    day = now.astimezone(ISTANBUL).date()
+    if entry:
+        await notebook.record(
+            db, user, entry, q["id"], key_answer, day, review=is_review, correct=correct
+        )
+        if is_review and choice:
+            await plan.credit_reviews(db, user, now)
     if choice:
         feedback = await make_feedback(db, user, row, q, data)
         await db.execute(
@@ -357,11 +462,13 @@ async def answer(
         await learning.refresh(db, user, q["topic_id"])
     else:
         await move(db, row)
-    return await presented(db, user, key)
+    return await presented(db, user, key, now)
 
 
-async def advance(db: AsyncSession, user: UUID, key: UUID, question: str) -> Practice:
-    row = await load(db, user, key)
+async def advance(
+    db: AsyncSession, user: UUID, key: UUID, question: str, now: datetime
+) -> Practice:
+    row = await load(db, user, key, now)
     if row["state"] == "feedback" and row["question_ids"][row["position"] - 1] == question:
         await move(db, row)
     elif not await db.scalar(
@@ -370,17 +477,17 @@ async def advance(db: AsyncSession, user: UUID, key: UUID, question: str) -> Pra
         )
     ):
         raise ApiError(409, "conflict", "Answer the current question first")
-    return await presented(db, user, key)
+    return await presented(db, user, key, now)
 
 
 async def finish(
     db: AsyncSession, user: UUID, key: UUID, now: datetime, lesson: str | None = None
 ) -> Practice:
-    row = await load(db, user, key)
+    row = await load(db, user, key, now)
     if lesson is not None and lesson != row["lesson_id"]:
         raise ApiError(409, "conflict", "Lesson does not match this session")
     if row["state"] == "completed":
-        return await presented(db, user, key)
+        return await presented(db, user, key, now)
     if row["state"] != "ready":
         raise ApiError(409, "conflict", "Finish all questions and feedback first")
     if row["lesson_id"]:
@@ -395,6 +502,8 @@ async def finish(
         .where(sessions.c.id == key)
         .values(state="completed", completed_at=now)
     )
+    if row["kind"] == "review":
+        return await presented(db, user, key, now)
     task_key = (
         "lesson:" + row["lesson_id"]
         if row["lesson_id"]
@@ -424,4 +533,4 @@ async def finish(
             .values(state="done", completed_at=now)
         )
         await plan.credit(db, current.plan_id, now)
-    return await presented(db, user, key)
+    return await presented(db, user, key, now)

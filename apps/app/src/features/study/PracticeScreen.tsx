@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Button, Label, Screen } from "../../components/Core";
 import { tr } from "../../i18n/tr";
@@ -52,6 +52,8 @@ export default function PracticeScreen() {
   async function close() {
     await Promise.all([
       cache.invalidateQueries({ queryKey: ["today"] }),
+      cache.invalidateQueries({ queryKey: ["notebook"] }),
+      cache.invalidateQueries({ queryKey: ["task"] }),
       cache.invalidateQueries({ queryKey: ["study-library"] }),
     ]);
     leave(source);
@@ -73,11 +75,15 @@ export default function PracticeScreen() {
       setReviewedQuestion(null);
     },
     onError: async (error) => {
-      if (error instanceof RequestFailure && error.status === 409)
+      if (error instanceof RequestFailure && [403, 409].includes(error.status))
         await q.refetch();
     },
   });
   const back = () => void close();
+  if (q.error instanceof RequestFailure && q.error.status === 403)
+    return (
+      <Redirect href={{ pathname: "/paywall", params: { from: source } }} />
+    );
   if (!session || q.error)
     return (
       <StudyStatus
@@ -115,6 +121,11 @@ export default function PracticeScreen() {
         key={f.question.id}
         feedback={f}
         subject={session.subtest}
+        isReview={session.kind === "review"}
+        onNotebook={() => {
+          void cache.invalidateQueries({ queryKey: ["notebook"] });
+          router.push("/notebook");
+        }}
         position={session.position}
         total={session.total}
         busy={next.isPending}
@@ -144,7 +155,7 @@ export default function PracticeScreen() {
           try {
             await accept(await answerPractice(sessionId, data));
           } catch (e) {
-            if (e instanceof RequestFailure && e.status === 409)
+            if (e instanceof RequestFailure && [403, 409].includes(e.status))
               await q.refetch();
             throw e;
           }

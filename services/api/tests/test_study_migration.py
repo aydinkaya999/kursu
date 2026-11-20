@@ -10,6 +10,7 @@ from sqlalchemy import Engine, func, select
 from app.core.settings import Settings
 from app.modules.accounts.models import users
 from app.modules.content.bundle import Bundle
+from app.modules.notebook.models import entries
 from app.modules.placement.models import answers, attempts
 from app.modules.plan.models import plans, tasks
 from app.modules.practice.models import completions, mastery
@@ -79,6 +80,10 @@ def test_m6_replays_m3_answers_and_m5_lessons_in_order(
             result = db.execute(select(mastery)).one()
             assert result.value == pytest.approx(0.24) and result.answers_count == 2
             assert db.scalar(select(completions.c.lesson_id)) == lesson["id"]
+            entry = db.execute(select(entries)).one()
+            assert entry.first_question_id == sample["questions"][1]["id"]
+            assert entry.correct_streak == 0 and entry.status == "open"
+            assert entry.due_on == at.date() + timedelta(days=1)
             assert (
                 db.scalar(select(answers.c.misconception_id).where(answers.c.position == 2))
                 == sample["questions"][1]["rationales"]["B"]["misconception_id"]

@@ -30,7 +30,11 @@ async def read_task(id: UUID, user: CurrentUser, db: Session, now: ServerTime) -
     return await service.task_action(db, user, id, now, None)
 
 
-@router.post("/plan/tasks/{id}/start", operation_id="startTask")
+@router.post(
+    "/plan/tasks/{id}/start",
+    operation_id="startTask",
+    responses={403: {"model": ErrorBody}},
+)
 async def start_task(id: UUID, user: CurrentUser, db: Session, now: ServerTime) -> PlanTask:
     result = await service.task_action(db, user, id, now, "start")
     await db.commit()

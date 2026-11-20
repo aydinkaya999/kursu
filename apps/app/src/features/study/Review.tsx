@@ -21,6 +21,8 @@ export function Review({
   onNext,
   onBack,
   onLesson,
+  onNotebook,
+  isReview,
   retry,
 }: {
   feedback: Feedback;
@@ -32,6 +34,8 @@ export function Review({
   onNext: () => void;
   onBack: () => void;
   onLesson: (id: string) => void;
+  onNotebook?: () => void;
+  isReview?: boolean;
   retry: () => void;
 }) {
   const [expanded, expand] = useState(false),
@@ -48,6 +52,22 @@ export function Review({
       contentStyle={s.page}
       footer={
         <>
+          {f.notebook_learned && onNotebook && (
+            <Button
+              variant="text"
+              label={tr.notebook.entryLearned}
+              onPress={onNotebook}
+            />
+          )}
+          {f.notebook_due_days != null && onNotebook && (
+            <Button
+              variant="text"
+              label={(isReview ? tr.notebook.updated : tr.notebook.saved)(
+                tr.notebook.when(f.notebook_due_days),
+              )}
+              onPress={onNotebook}
+            />
+          )}
           {error ? <Status error={error} retry={retry} /> : null}
           <Button
             label={tr.placement.next}

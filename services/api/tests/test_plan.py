@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, select, update
-from study_support import finish_task
+from study_support import finish_task, grant_pass
 
 from app.core.http import ISTANBUL, server_now
 from app.core.settings import Settings
@@ -233,10 +233,39 @@ def test_plan_2_3_7_due_reviews_use_real_guest_history(
         first = day["tasks"][0]
         assert first["minutes"] == 1.25 and first["count"] == 1
         assert day["days_to_exam"] == 30
-        for action in ("start", "complete"):
-            c.post(
-                f"/v1/plan/tasks/{first['id']}/{action}", headers=user
-            ).raise_for_status()
+        path = f"/v1/plan/tasks/{first['id']}"
+        assert c.post(path + "/start", headers=user).status_code == 403
+        grant_pass(c, user, engine, EXAM)
+        assert c.post(path + "/complete", headers=user).status_code == 409
+        state = c.post(
+            "/v1/practice-sessions",
+            headers=user,
+            json={"kind": "review", "task_id": first["id"]},
+        ).json()
+        assert state["question"]["id"] != item["id"]
+        url = "/v1/practice-sessions/" + state["id"]
+        with engine.connect() as db:
+            right = db.scalar(
+                select(questions.c.correct_option).where(
+                    questions.c.id == state["question"]["id"]
+                )
+            )
+        graded = c.post(
+            url + "/answers",
+            headers=user,
+            json={
+                "question_id": state["question"]["id"],
+                "client_answer_id": str(uuid4()),
+                "selected_option": right,
+            },
+        )
+        graded.raise_for_status()
+        assert graded.json()["feedback"]["is_correct"]
+        c.post(
+            url + "/advance", headers=user, json={"question_id": state["question"]["id"]}
+        ).raise_for_status()
+        c.post(url + "/finish", headers=user).raise_for_status()
+        assert c.get(path, headers=user).json()["state"] == "done"
         clock += DAY
         assert not any(
             t["kind"] == "review"

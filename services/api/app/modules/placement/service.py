@@ -15,6 +15,8 @@ from app.modules.accounts.models import profiles, users
 from app.modules.accounts.schemas import PlacementStatus
 from app.modules.content.models import questions, remote_config, subtests, topics
 from app.modules.content.schemas import UnansweredQuestion
+from app.modules.notebook import rules as notebook_rules
+from app.modules.notebook import service as notebook
 from app.modules.placement.models import answers, attempts
 from app.modules.placement.schemas import (
     Breakdown,
@@ -378,7 +380,7 @@ async def submit(
     subject = order[row["position"] - 1]
     item = (
         await session.execute(
-            select(q.subtest_id, q.topic_id, q.correct_option, q.rationales)
+            select(q.subtest_id, q.topic_id, q.objective_id, q.correct_option, q.rationales)
             .where(
                 q.id == data.question_id,
                 q.status.in_(visible(user)),
@@ -395,22 +397,43 @@ async def submit(
         if data.selected_option is None
         else data.selected_option == item.correct_option
     )
+    answer_id = uuid4()
+    misconception = (
+        item.rationales[data.selected_option].get("misconception_id")
+        if correct is False and data.selected_option
+        else None
+    )
+    key = (
+        notebook_rules.entry_key(item.objective_id, misconception)
+        if notebook_rules.qualifies(correct, data.not_sure)
+        else None
+    )
     await session.execute(
         insert(answers).values(
-            id=uuid4(),
+            id=answer_id,
+            notebook_key=key,
             user_id=user,
             placement_id=attempt_id,
             position=row["position"],
             subtest_id=item.subtest_id,
             topic_id=item.topic_id,
             is_correct=correct,
-            misconception_id=item.rationales[data.selected_option].get("misconception_id")
-            if correct is False and data.selected_option
-            else None,
+            misconception_id=misconception,
             answered_at=now,
             **data.model_dump(),
         )
     )
+    if key:
+        await notebook.record(
+            session,
+            user,
+            key,
+            data.question_id,
+            answer_id,
+            now.astimezone(ISTANBUL).date(),
+            review=False,
+            correct=correct,
+        )
     levels = dict(row["levels"])
     if correct is not None:
         await learning.refresh(session, user, item.topic_id)

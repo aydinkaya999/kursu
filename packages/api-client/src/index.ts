@@ -160,6 +160,28 @@ export type ApiDocument = {
             "title": "Misconception Count",
             "type": "integer"
           },
+          "notebook_due_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notebook Due Days"
+          },
+          "notebook_learned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notebook Learned"
+          },
           "question": {
             "$ref": "#/components/schemas/UnansweredQuestion"
           },
@@ -243,6 +265,13 @@ export type ApiDocument = {
         ],
         "title": "FocusTopic",
         "type": "object"
+      },
+      "GroupBy": {
+        "enum": [
+          "topic",
+          "misconception"
+        ],
+        "type": "string"
       },
       "GuestRequest": {
         "properties": {
@@ -682,6 +711,108 @@ export type ApiDocument = {
         "title": "NotFound",
         "type": "object"
       },
+      "NotebookGroup": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "learned_count": {
+            "default": 0,
+            "title": "Learned Count",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "next_due_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due Days"
+          },
+          "next_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due On"
+          },
+          "open_count": {
+            "default": 0,
+            "title": "Open Count",
+            "type": "integer"
+          },
+          "subtests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subtests",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "subtests"
+        ],
+        "title": "NotebookGroup",
+        "type": "object"
+      },
+      "NotebookSummary": {
+        "properties": {
+          "due_today": {
+            "title": "Due Today",
+            "type": "integer"
+          },
+          "due_tomorrow": {
+            "title": "Due Tomorrow",
+            "type": "integer"
+          },
+          "intervals": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Intervals",
+            "type": "array"
+          },
+          "learned_count": {
+            "title": "Learned Count",
+            "type": "integer"
+          },
+          "open_count": {
+            "title": "Open Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "open_count",
+          "learned_count",
+          "due_today",
+          "due_tomorrow",
+          "intervals"
+        ],
+        "title": "NotebookSummary",
+        "type": "object"
+      },
       "NotesSource": {
         "properties": {
           "kind": {
@@ -1037,7 +1168,8 @@ export type ApiDocument = {
       "PracticeKind": {
         "enum": [
           "lesson_check",
-          "topic_test"
+          "topic_test",
+          "review"
         ],
         "type": "string"
       },
@@ -1049,7 +1181,12 @@ export type ApiDocument = {
             "type": "string"
           },
           "kind": {
-            "$ref": "#/components/schemas/PracticeKind"
+            "enum": [
+              "lesson_check",
+              "topic_test"
+            ],
+            "title": "Kind",
+            "type": "string"
           },
           "task_id": {
             "anyOf": [
@@ -1415,6 +1552,63 @@ export type ApiDocument = {
           "received"
         ],
         "title": "ReportReceipt",
+        "type": "object"
+      },
+      "ReviewStart": {
+        "additionalProperties": false,
+        "properties": {
+          "group_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupBy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "kind": {
+            "const": "review",
+            "title": "Kind",
+            "type": "string"
+          },
+          "mode": {
+            "default": "due",
+            "enum": [
+              "due",
+              "early"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "ReviewStart",
         "type": "object"
       },
       "ScoreType": {
@@ -2887,6 +3081,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3131,6 +3335,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -3596,6 +3810,103 @@ export type ApiDocument = {
         "summary": "List Mocks",
         "tags": [
           "Catalogue"
+        ]
+      }
+    },
+    "/v1/notebook": {
+      "get": {
+        "operationId": "getNotebook",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/GroupBy",
+              "default": "topic"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotebookGroup"
+                  },
+                  "title": "Response Getnotebook",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Notebook",
+        "tags": [
+          "Notebook"
+        ]
+      }
+    },
+    "/v1/notebook/summary": {
+      "get": {
+        "operationId": "notebookSummary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotebookSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Summary",
+        "tags": [
+          "Notebook"
         ]
       }
     },
@@ -4159,6 +4470,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4284,7 +4605,15 @@ export type ApiDocument = {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PracticeStart"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PracticeStart"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ReviewStart"
+                  }
+                ],
+                "title": "Data"
               }
             }
           },
@@ -4310,6 +4639,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -4388,6 +4727,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -4477,6 +4826,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4565,6 +4924,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4643,6 +5012,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -4712,6 +5091,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {

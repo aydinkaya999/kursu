@@ -13,15 +13,22 @@ from uuid import uuid4
 import uvicorn
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.schema import CreateSchema, DropSchema
 
 from app.cli import import_documents
-from app.core.http import ISTANBUL, server_now
+from app.core.http import ISTANBUL, ServerTime, Session, server_now
 from app.core.settings import Settings
+from app.modules.accounts.security import CurrentUser
 from app.modules.content.bundle import SAMPLE_FILE, read_document
+from app.modules.content.models import remote_config
 from app.modules.content.placeholders import make_placeholders
+from app.modules.notebook.models import entitlements
+from app.modules.placement.schemas import Submission
+from app.modules.placement.service import lock_user
+from app.modules.practice import service as practice
+from app.modules.practice.schemas import PracticeStart
 
 
 def stop(signum: int, frame: FrameType | None) -> None:
@@ -79,6 +86,47 @@ def main() -> None:
         from app.modules.accounts.email_login import email_sender
 
         app = create_app()
+
+        @app.post("/fixtures/paid-review")
+        async def paid_review(db: Session, user: CurrentUser, now: ServerTime) -> None:
+            """Exercise yesterday's real answer path in the isolated test schema."""
+            await lock_user(db, user)
+            until = await db.scalar(
+                select(remote_config.c.value).where(remote_config.c.key == "results_date")
+            )
+            await db.execute(
+                entitlements.insert().values(
+                    user_id=user,
+                    kind="season_pass",
+                    source="web",
+                    valid_until=date.fromisoformat(str(until)),
+                )
+            )
+            yesterday = now - timedelta(days=1)
+            state = await practice.start(
+                db,
+                user,
+                PracticeStart(
+                    kind="lesson_check",
+                    content_id="lesson.legislation.firsat-ve-imkan-esitligi",
+                ),
+                yesterday,
+            )
+            assert state.question
+            await practice.answer(
+                db,
+                user,
+                state.id,
+                Submission(
+                    question_id=state.question.id,
+                    selected_option="B",
+                    not_sure=False,
+                    client_answer_id=uuid4(),
+                ),
+                yesterday,
+            )
+            await db.commit()
+
         mailbox = Path(__file__).resolve().parents[3] / "apps/app/test-results/mailbox"
 
         class TestInbox:

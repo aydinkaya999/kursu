@@ -15,6 +15,7 @@ class Assignment(BaseModel):
     subtest: str | None = None
     count: int = 0
     objectives: list[str] = Field(default_factory=list)
+    entry_keys: list[str] = Field(default_factory=list)
     quarters: int
 
     @property

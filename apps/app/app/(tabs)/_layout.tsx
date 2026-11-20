@@ -27,7 +27,7 @@ export default function NavigationLayout() {
       <View style={styles.page}>
         <Slot />
       </View>
-      {!wide && <TabBar current={current} />}
+      {!wide && current !== "notebook" && <TabBar current={current} />}
     </SafeAreaView>
   );
 }

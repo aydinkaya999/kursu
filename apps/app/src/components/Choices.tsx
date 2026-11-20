@@ -146,7 +146,7 @@ function Group<T extends string>({
                 active
                   ? pills
                     ? colors.onPrimary
-                    : colors.primaryStrong
+                    : colors.ink
                   : pills
                     ? colors.ink
                     : colors.inkMuted

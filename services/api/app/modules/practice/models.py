@@ -28,12 +28,15 @@ sessions = Table(
     Column("topic_id", Text, ForeignKey("topics.id"), nullable=False),
     Column("lesson_id", Text, ForeignKey("lessons.id")),
     Column("task_id", Uuid, ForeignKey("plan_tasks.id", ondelete="SET NULL"), index=True),
+    Column("review_items", JSONB(none_as_null=True)),
     Column("question_ids", JSONB, nullable=False),
     Column("position", Integer, nullable=False),
     Column("state", Text, nullable=False),
     Column("started_at", DateTime(timezone=True), nullable=False),
     Column("completed_at", DateTime(timezone=True)),
-    CheckConstraint("kind IN ('lesson_check','topic_test')", name="ck_practice_kind"),
+    CheckConstraint(
+        "kind IN ('lesson_check','topic_test','review')", name="ck_practice_kind"
+    ),
     CheckConstraint(
         "(kind = 'lesson_check') = (lesson_id IS NOT NULL)", name="ck_practice_lesson"
     ),

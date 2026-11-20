@@ -1,6 +1,6 @@
 # Kürsü
 
-Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. Candidates can take the adaptive AGS placement test, open their daily plan, study micro-lessons and practise with questions selected for their mastery.
+Kürsü uses one Expo Router app for web, iOS and Android, backed by FastAPI and PostgreSQL 16. Candidates can take the adaptive AGS placement test, open their daily plan, study micro-lessons, practise with questions selected for their mastery and revisit missed or uncertain answers in the mistake notebook.
 
 ## Run locally
 
@@ -38,7 +38,7 @@ Open `/` to start. A new guest chooses a teaching field, daily study time and fi
 
 The API renews guest sessions using an HttpOnly cookie on web and secure OS storage on mobile. Serve the web app and API over HTTPS on the same site in production, configure the web origin in `APP_ORIGIN` and supply a stable private `JWT_SECRET` of at least 32 bytes. Use the same hostname for both servers in local web development. The countdown and retake availability come from the server.
 
-The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. The destination routes support direct links and browser history. Today opens the candidate’s plan, placement actions and Settings. In development, Today also shows the live API health check.
+The phone shell links to Today, Lessons, Mock and Progress. On web at 1024 px or wider a side menu also links to the mistake notebook. On phones, open **Yanlış defteri** from Today or a saved answer’s feedback. The destination routes support direct links and browser history. Today opens the candidate’s plan, placement actions and Settings. In development, Today also shows the live API health check.
 
 In development, select **Bileşen galerisi** on Today on any platform, or open `http://localhost:8081/gallery` on web. Try the selection controls, question map and navigation previews there. The pinned **Bugüne dön** button returns to Today. The sample state lasts for the current gallery visit. The app bundles the five Plus Jakarta Sans weights locally and renders the reference icons with SVG. Production builds protect the gallery route. A static web host should serve `index.html` for application routes so deep links can enter the shell.
 
@@ -54,7 +54,7 @@ Settings supports daily minutes, an optional Istanbul notification time, the AI-
 
 Today opens a personal plan on the first visit of each Istanbul day. The server schedules due reviews, up to two five-minute lessons and a 10–15 question topic test within the selected budget. The configured mock day has one 110-minute exam. In the final 30 days, study days use due reviews and previously opened topics. Changing the daily minutes in Settings rebuilds the current plan and preserves completed work. An unfinished assignment from an earlier day can occupy a later study slot within that day's budget.
 
-Open a row or choose **Başla** to start the assigned activity. Completing the two lesson checks or the assigned topic test updates Today, the current streak and the weekly goal. Review and mock assignments still use **Görevi tamamla**. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. Placement answers, practice answers and completed lessons contribute to planning.
+Open a row or choose **Başla** to start the assigned activity. Completing the two lesson checks or the assigned topic test updates Today, the current streak and the weekly goal. The review task receives credit when its assigned notebook entries have graded review answers. The mock assignment uses **Görevi tamamla** until M8. The first missed day in a Monday–Sunday week uses a freeze. Five completed days meet the weekly goal. The wide layout adds the net estimate and three weakest subtests. Placement answers, practice answers and completed lessons contribute to planning.
 
 For the API, use `GET /v1/plan/today`, `GET /v1/plan/tasks/{id}` and the task's `POST /start` and `POST /complete` operations. The server owns all dates, task estimates, state transitions, progress and streaks. Browser tests run against isolated schemas and a local test mailbox. The API's development email log and test mailbox require no mail service.
 
@@ -94,6 +94,20 @@ Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It 
 
 Before publishing, include the cited article text for law material and one step per operation for quantitative questions. Re-import the updated seed when upgrading an M5 database. Older items with missing articles or quantitative steps become available for practice when their source data is completed. The seed quotes articles 4 and 8 from the Ministry's publication of Law No. 1739. [Official text](https://iegm.meb.gov.tr/meb_iys_dosyalar/2025_11/28150724_milliegitimtemelkanunu.pdf) · [Maths notation](docs/MATH_NOTATION.md)
 
+## Mistake notebook
+
+Open `/notebook` to see missed and uncertain answers grouped by topic or misconception. The server schedules reviews in Istanbul time, using the exam date and regular intervals from remote config. Each review asks a different question for the same objective. A wrong review resets the interval. Three consecutive correct reviews mark the entry learned. With fewer than 14 days until the exam the intervals shorten and every open entry is due by the eve of the exam. An entry without a published or eligible prerelease sibling stays in the notebook.
+
+Free accounts can view the notebook. Starting a due or early review requires a season pass. To exercise the paid path locally, copy your development user ID from the authenticated `GET /v1/me` response. Run `docker compose exec postgres psql -U kursu -d kursu`, then use the following in that local database. M9 adds checkout and purchase verification.
+
+```sql
+\prompt 'Development user UUID: ' dev_user
+INSERT INTO entitlements (user_id, kind, source, valid_until)
+SELECT :'dev_user'::uuid, 'season_pass', 'web', (value #>> '{}')::date
+FROM remote_config WHERE key = 'results_date'
+ON CONFLICT (user_id, kind) DO UPDATE SET valid_until = EXCLUDED.valid_until;
+```
+
 ## Repository
 
 - `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles server state and the placement screens are in `src/features/placement/`.
@@ -102,4 +116,4 @@ Before publishing, include the cited article text for law material and one step 
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md)

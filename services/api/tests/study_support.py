@@ -1,7 +1,21 @@
+from datetime import date
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine
+
+from app.modules.notebook.models import entitlements
+
+
+def grant_pass(c: TestClient, auth: dict[str, str], engine: Engine, until: date) -> None:
+    user = UUID(c.get("/v1/me", headers=auth).json()["id"])
+    with engine.begin() as db:
+        db.execute(
+            entitlements.insert().values(
+                user_id=user, kind="season_pass", source="web", valid_until=until
+            )
+        )
 
 
 def practice_start(

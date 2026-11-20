@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Screen, Button, Label } from "../../components/Core";
 import { tr } from "../../i18n/tr";
+import { RequestFailure } from "../../lib/session";
 import { formatDuration } from "../../lib/format";
 import { Status } from "../placement/Status";
 import { startPractice } from "../study/api";
@@ -20,16 +21,23 @@ export default function TaskDetail() {
     networkMode: "always",
   });
   const task = q.data;
-  const topic = task?.kind === "topic_test" && task.state !== "done";
+  const practiceTask =
+    !!task &&
+    (task.kind === "topic_test" || task.kind === "review") &&
+    task.state !== "done";
   const practice = useQuery({
     queryKey: ["task-practice", id],
     queryFn: () =>
-      startPractice({
-        kind: "topic_test",
-        content_id: task!.content_id!,
-        task_id: id,
-      }),
-    enabled: topic,
+      startPractice(
+        task?.kind === "review"
+          ? { kind: "review", mode: "due", task_id: id }
+          : {
+              kind: "topic_test",
+              content_id: task!.content_id!,
+              task_id: id,
+            },
+      ),
+    enabled: practiceTask,
     retry: false,
     networkMode: "always",
     refetchOnWindowFocus: false,
@@ -64,7 +72,14 @@ export default function TaskDetail() {
         }}
       />
     );
-  if (topic) {
+  if (practiceTask) {
+    if (
+      practice.error instanceof RequestFailure &&
+      practice.error.status === 403
+    )
+      return (
+        <Redirect href={{ pathname: "/paywall", params: { from: "today" } }} />
+      );
     if (!practice.data || practice.error)
       return (
         <StudyStatus

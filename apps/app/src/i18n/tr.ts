@@ -48,6 +48,41 @@ export const tr = {
     complete: "Çalışma tamamlandı.",
     unavailable: "Bu içerik şu anda kullanılamıyor.",
   },
+  notebook: {
+    counts: (open: number, learned: number) =>
+      open + " açık kayıt · " + learned + " kayıt öğrenildi",
+    done: "Bugünkü tekrar tamam",
+    tomorrow: (n: number) => "Yarın " + n + " soru seni bekliyor",
+    due: (n: number) => "Bugün " + n + " tekrar sorun var",
+    early: "Erken tekrar et",
+    start: "Tekrara başla",
+    byTopic: "Konuya göre",
+    byMisconception: "Yanılgıya göre",
+    grouping: "Gruplama",
+    status: "Tekrar durumu",
+    empty:
+      "Defterin boş. Yanlış yaptığın ve emin olmadığın sorular burada toplanır.",
+    when: (days: number) =>
+      days === 0 ? "bugün" : days === 1 ? "yarın" : days + " gün sonra",
+    next: (when: string) => "sıradaki tekrar " + when,
+    learned: (n: number) => n + " kayıt öğrenildi",
+    unclassified: "Yanılgısı belirlenmemiş",
+    intervals: (days: number[]) =>
+      "Tekrarlar " +
+      (days.length > 1 ? days.slice(0, -1).join(", ") + " ve " : "") +
+      days[days.length - 1] +
+      " gün arayla gelir. Aynı soru yerine aynı konuyu ölçen yeni bir soru sorulur; üst üste üç doğru kaydı kapatır.",
+    saved: (when: string) => "Yanlış defterine eklendi · ilk tekrar " + when,
+    updated: (when: string) =>
+      "Yanlış defteri güncellendi · sıradaki tekrar " + when,
+    entryLearned: "Yanlış defteri güncellendi · kayıt öğrenildi",
+    unavailable: "Bu kayıt için şu anda yeni bir tekrar sorusu yok.",
+    pass: "Sezon paketi",
+    passIntro: "Sınava kadar tam erişim, tek ödeme",
+    access:
+      "Ücretsiz sürümde yanlış defterini görebilirsin. Sezon paketiyle tekrar sorularını çözebilirsin.",
+    continueFree: "Ücretsiz sürümle devam et",
+  },
   today: {
     title: (n: number) => "Bugün " + n + " görevin var",
     summary: (n: number, done: string) => n + " görevden " + done + " tamam",

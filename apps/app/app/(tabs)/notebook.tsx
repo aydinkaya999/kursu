@@ -1,4 +1,1 @@
-import { DestinationScreen } from "../../src/components/DestinationScreen";
-export default function Notebook() {
-  return <DestinationScreen destination="notebook" />;
-}
+export { default } from "../../src/features/notebook/Notebook";

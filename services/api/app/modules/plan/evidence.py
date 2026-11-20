@@ -1,6 +1,6 @@
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from fractions import Fraction
 from uuid import UUID
 
@@ -15,12 +15,14 @@ from app.modules.content.service import (
     lesson_catalogue,
     mock_catalogue,
 )
+from app.modules.notebook import reviews
+from app.modules.notebook import service as notebook
 from app.modules.placement.models import answers, attempts
 from app.modules.placement.service import expected_net, range_for
 from app.modules.plan.models import plans, tasks
 from app.modules.plan.rules import DAY, Topic, half_up
 from app.modules.plan.schemas import Priority
-from app.modules.practice.models import completions
+from app.modules.practice.models import completions, sessions
 from app.modules.practice.models import mastery as topic_mastery
 
 
@@ -48,6 +50,51 @@ async def history(db: AsyncSession, user: UUID) -> list[RowMapping]:
     )
 
 
+async def graded_today(db: AsyncSession, user: UUID, day: date) -> set[str]:
+    start = datetime.combine(day, time.min, ISTANBUL)
+    return set(
+        await db.scalars(
+            select(answers.c.notebook_key)
+            .join_from(answers, sessions)
+            .where(
+                answers.c.user_id == user,
+                sessions.c.kind == "review",
+                answers.c.is_correct.is_not(None),
+                answers.c.notebook_key.is_not(None),
+                answers.c.answered_at >= start,
+                answers.c.answered_at < start + DAY,
+            )
+        )
+    )
+
+
+async def due_entries(
+    db: AsyncSession, user: UUID, day: date, work: list[RowMapping]
+) -> list[str]:
+    items = await notebook.read(db, user, day, await notebook.calendar(db))
+    due = [i for i in items if i.due and i.due <= day]
+    candidates = await reviews.bank(db, user, {i.objective for i in due})
+    keys = [
+        i.key for i in due if reviews.sibling(candidates[i.objective], i.first_question)
+    ]
+    current = next(
+        (
+            t
+            for t in work
+            if t["plan_date"] == day and t["type"] == "review" and t["included"]
+        ),
+        None,
+    )
+    if current:
+        # Keep the assigned order and partial credit during a same-day rebuild.
+        counted = await graded_today(db, user, day)
+        assigned = [
+            k for k in current["ref"].get("entry_keys", []) if k in counted or k in keys
+        ]
+        return list(dict.fromkeys([*assigned, *keys]))
+    return keys
+
+
 async def read(
     db: AsyncSession, user: UUID, day: date, now: datetime, work: list[RowMapping]
 ) -> Evidence:
@@ -59,11 +106,8 @@ async def read(
                 a.subtest_id,
                 a.selected_option,
                 a.is_correct,
-                a.not_sure,
                 a.answered_at,
-                q.objective_id,
             )
-            .join_from(answers, content.questions)
             .where(a.user_id == user, a.answered_at <= now)
             .order_by(a.answered_at, a.id)
         )
@@ -80,7 +124,6 @@ async def read(
         .all()
     )
     seen: set[str] = set()
-    reviewed: dict[str, datetime] = {}
     read_lessons = set(
         await db.scalars(
             select(completions.c.lesson_id).where(completions.c.user_id == user)
@@ -93,25 +136,13 @@ async def read(
             seen.add(ref["topic_id"])
         if item["state"] != "done":
             continue
-        if item["type"] == "review":
-            for objective in ref["objectives"]:
-                reviewed[objective] = max(
-                    reviewed.get(objective, item["completed_at"]), item["completed_at"]
-                )
         if item["type"] == "lesson":
             read_lessons.add(ref["content_id"])
         if item["type"] == "mock":
             done_mocks.add(ref["content_id"])
-    earliest: dict[str, date] = {}
     for r in records:
         if r.selected_option is not None:
             seen.add(r.topic_id)
-        if (r.is_correct is False or r.not_sure) and (
-            r.objective_id not in reviewed or r.answered_at > reviewed[r.objective_id]
-        ):
-            due = r.answered_at.astimezone(ISTANBUL).date() + DAY
-            if due <= day:
-                earliest.setdefault(r.objective_id, due)
     subtests = (
         (await db.execute(select(content.subtests).order_by(content.subtests.c.exam_order)))
         .mappings()
@@ -201,7 +232,7 @@ async def read(
     )
     return Evidence(
         topics,
-        sorted(earliest, key=lambda k: (earliest[k], k)),
+        await due_entries(db, user, day, work),
         (mock["id"], mock["title"]) if mock else None,
         {m["id"] for m in rows},
         priorities,

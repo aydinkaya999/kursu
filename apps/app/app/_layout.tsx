@@ -16,6 +16,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false, animation: "none" }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="paywall" options={{ presentation: "modal" }} />
             <Stack.Protected guard={__DEV__}>
               <Stack.Screen name="gallery" />
             </Stack.Protected>

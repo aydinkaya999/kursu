@@ -11,6 +11,7 @@ from app.core.settings import Settings
 from app.modules.accounts.access import router as access_router
 from app.modules.accounts.router import router as account_router
 from app.modules.content.router import router as catalogue_router
+from app.modules.notebook.router import router as notebook_router
 from app.modules.placement.router import router as placement_router
 from app.modules.plan.router import router as plan_router
 from app.modules.practice.router import router as practice_router
@@ -69,6 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in (
         account_router,
         access_router,
+        notebook_router,
         placement_router,
         plan_router,
         practice_router,

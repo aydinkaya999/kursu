@@ -12,14 +12,14 @@ from app.modules.content.schemas import (
 )
 from app.modules.placement.schemas import Letter
 
-type PracticeKind = Literal["lesson_check", "topic_test"]
+type PracticeKind = Literal["lesson_check", "topic_test", "review"]
 type PracticeState = Literal["question", "feedback", "ready", "completed"]
 type MasteryState = Literal["not_started", "in_progress", "solid"]
 
 
 class PracticeStart(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    kind: PracticeKind
+    kind: Literal["lesson_check", "topic_test"]
     content_id: str
     task_id: UUID | None = None
 
@@ -50,6 +50,8 @@ class Feedback(BaseModel):
     rationales: list[Rationale]
     source: LawSource | LessonSource | NotesSource
     steps: list[SolutionStep]
+    notebook_due_days: int | None = None
+    notebook_learned: bool | None = None
     misconception_count: int
     suggest_lesson: bool
     related_lesson_id: str | None

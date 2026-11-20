@@ -62,7 +62,11 @@ async def merge_plans(db: AsyncSession, source: UUID, target: UUID) -> None:
                         ref["objectives"] = sorted(
                             set(ref["objectives"]) | set(other["ref"]["objectives"])
                         )
-                        ref["count"] = len(ref["objectives"])
+                        ref["entry_keys"] = sorted(
+                            set(ref.get("entry_keys", []))
+                            | set(other["ref"].get("entry_keys", []))
+                        )
+                        ref["count"] = len(set(ref["objectives"]) | set(ref["entry_keys"]))
                         ref["quarters"] = ref["count"] * 5
                     changes.update(ref=ref, est_quarters=ref["quarters"])
                 await db.execute(

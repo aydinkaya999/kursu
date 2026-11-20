@@ -31,6 +31,11 @@ def half_up(value: float) -> int:
     return floor(value + 0.5)
 
 
+def review_capacity(minutes: int, spent_quarters: int) -> int:
+    budget = minutes * 4
+    return max(0, min(budget * 2 // 5, budget - spent_quarters) // 5)
+
+
 def build(
     *,
     day: date,
@@ -76,10 +81,10 @@ def build(
         return result
     kinds = [a.kind for a in kept]
     if "review" not in kinds and due:
-        n = min(len(due), min(budget * 2 // 5, left) // 5)
+        n = min(len(due), review_capacity(minutes, budget - left))
         if n:
             result.append(
-                Assignment(kind="review", count=n, objectives=due[:n], quarters=n * 5)
+                Assignment(kind="review", count=n, entry_keys=due[:n], quarters=n * 5)
             )
             left -= n * 5
     near = (exam - day).days <= NEAR_EXAM

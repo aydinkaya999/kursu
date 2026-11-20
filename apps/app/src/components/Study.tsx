@@ -80,10 +80,11 @@ export function ListRow({
   title: string;
   meta: string;
   count?: number;
-  onPress: () => void;
+  onPress?: () => void;
 }) {
+  const Row = onPress ? Action : View;
   return (
-    <Action
+    <Row
       accessibilityLabel={[
         title,
         meta,
@@ -96,7 +97,7 @@ export function ListRow({
     >
       <View style={styles.description}>
         <Label variant="rowTitle">{title}</Label>
-        <Label variant="small" color={colors.inkMuted}>
+        <Label variant="small" weight={400} color={colors.inkMuted}>
           {meta}
         </Label>
       </View>
@@ -107,8 +108,8 @@ export function ListRow({
           </Label>
         </View>
       )}
-      <Icon name="chevron" size={18} color={colors.inkMuted} />
-    </Action>
+      {onPress && <Icon name="chevron" size={18} color={colors.inkMuted} />}
+    </Row>
   );
 }
 export type MapQuestion = {

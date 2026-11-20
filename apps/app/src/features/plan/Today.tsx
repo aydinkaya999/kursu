@@ -219,7 +219,7 @@ export default function Today() {
   const start = useMutation({
     networkMode: "always",
     mutationFn: (task: Task) =>
-      task.state === "done"
+      task.state === "done" || task.kind === "review"
         ? Promise.resolve(task)
         : taskAction(task.id, "start"),
     onSuccess: (task) => {
@@ -260,6 +260,15 @@ export default function Today() {
         />
       )}
       {(!day.data || !enabled) && <TodayPlacement />}
+      {!wide && (
+        <Link href="/notebook" asChild>
+          <Action accessibilityRole="link" accessibilityLabel={tr.nav.notebook}>
+            <Label variant="link" color={colors.primary}>
+              {tr.nav.notebook}
+            </Label>
+          </Action>
+        </Link>
+      )}
       <Link href="/settings" asChild>
         <Action
           accessibilityRole="link"

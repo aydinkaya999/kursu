@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
@@ -10,7 +10,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select, update
-from study_support import finish_task, practice_start
+from study_support import finish_task, grant_pass, practice_start
 
 from app.core.settings import Settings
 from app.main import create_app
@@ -23,6 +23,7 @@ from app.modules.accounts.models import (
     users,
 )
 from app.modules.accounts.providers import IdentityProvider, Provider, provider_client
+from app.modules.notebook.models import entitlements, entries
 from app.modules.placement.models import answers, attempts
 from app.modules.plan.models import plans, streaks, tasks
 from app.modules.practice.models import completions, mastery, reports, sessions
@@ -388,13 +389,20 @@ def test_study_data_survives_account_merge_and_is_erased_on_deletion(
             headers=user,
             json={"question_id": question, "text": "Maddeyi kontrol edin."},
         ).raise_for_status()
+    before = client.get("/v1/notebook/summary", headers=first).json()
+    assert before["open_count"] > 0
+    assert client.get("/v1/notebook/summary", headers=second).json() == before
+    grant_pass(client, second, engine, date(2027, 6, 11))
     unfinished = practice_start(client, second, "topic_test", "quantitative.percent-ratio")
     merged = headers(login(auth_app, second, "email"))
     assert (
         client.get("/v1/practice-sessions/" + unfinished["id"], headers=merged).json()
         == unfinished
     )
+    assert client.get("/v1/notebook/summary", headers=merged).json() == before
     with engine.connect() as db:
+        assert db.scalar(select(func.count()).select_from(entitlements)) == 1
+        assert db.scalar(select(func.count()).select_from(entries)) == before["open_count"]
         assert db.scalar(select(func.count()).select_from(completions)) == 1
         assert db.scalar(select(func.count()).select_from(reports)) == 1
         assert db.scalar(select(func.count()).select_from(sessions)) == 3
@@ -416,5 +424,13 @@ def test_study_data_survives_account_merge_and_is_erased_on_deletion(
         )
     client.delete("/v1/me", headers=merged).raise_for_status()
     with engine.connect() as db:
-        for table in (sessions, answers, mastery, completions, reports):
+        for table in (
+            sessions,
+            answers,
+            mastery,
+            completions,
+            reports,
+            entries,
+            entitlements,
+        ):
             assert db.scalar(select(func.count()).select_from(table)) == 0

@@ -18,6 +18,9 @@ function type(
   return { fontSize, lineHeight, weight, letterSpacing };
 }
 export const typography = {
+  notebookTitle: type(22, 28, 800, -0.22),
+  notebookStatus: type(16, 21, 800),
+  notebookHint: type(12.5, 18, 400),
   todayWide: type(32, 40, 800, -0.32),
   dayCount: type(17, 22, 800),
   feedbackTitle: type(17, 24, 800),
