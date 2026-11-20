@@ -1,9 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, type ReactNode } from "react";
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import {
   Action,
+  Button,
   Card,
   Label,
   PrimaryCard,
@@ -22,6 +28,7 @@ import {
   inflectedNumber,
 } from "../../lib/format";
 import { colors, radius, size, space } from "../../theme";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import HealthPanel from "../health/HealthPanel";
 import { TodayPlacement } from "../placement/TodayPlacement";
 import { useConfig, useMe } from "../placement/queries";
@@ -194,6 +201,8 @@ export function DayView({
 }
 
 export default function Today() {
+  const { preview } = useLocalSearchParams<{ preview?: string }>();
+  const prompted = useRef(false);
   const { width } = useWindowDimensions();
   const wide = Platform.OS === "web" && width >= size.wide;
   const me = useMe(),
@@ -208,6 +217,12 @@ export default function Today() {
     retry: false,
   });
   const refresh = day.refetch;
+  useEffect(() => {
+    if (isLimit(day.error) && preview !== "closed" && !prompted.current) {
+      prompted.current = true;
+      router.push(limitRoute(day.error, "today"));
+    }
+  }, [day.error, preview]);
   useFocusEffect(
     useCallback(() => {
       if (enabled) void refresh();
@@ -222,6 +237,9 @@ export default function Today() {
       task.state === "done" || task.kind === "review"
         ? Promise.resolve(task)
         : taskAction(task.id, "start"),
+    onError: (error) => {
+      if (isLimit(error)) router.push(limitRoute(error, "today"));
+    },
     onSuccess: (task) => {
       cache.setQueryData(["task", task.id], task);
       router.push({ pathname: "/plan/task", params: { id: task.id } });
@@ -229,7 +247,15 @@ export default function Today() {
   });
   return (
     <Screen inShell contentStyle={wide ? s.pageWide : undefined}>
-      {day.data && enabled ? (
+      {isLimit(day.error) ? (
+        <Card>
+          <Label>{tr.commerce.planEnded}</Label>
+          <Button
+            label={tr.commerce.see}
+            onPress={() => router.push(limitRoute(day.error, "today"))}
+          />
+        </Card>
+      ) : day.data && enabled ? (
         <DayView
           controls={
             <TodayPlacement

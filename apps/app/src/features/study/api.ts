@@ -1,5 +1,5 @@
 import { client } from "../../lib/api";
-import { authorized, requireSuccess } from "../../lib/session";
+import { authorized, checkAccess, requireSuccess } from "../../lib/session";
 import type { Answer } from "../placement/api";
 import { getLesson } from "../plan/api";
 export { getLesson };
@@ -10,6 +10,7 @@ export type TopicStart = NonNullable<
 export function library() {
   return authorized(async (auth) => {
     const res = await client["/v1/study/lessons"].get(auth);
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -17,6 +18,7 @@ export function library() {
 export function startPractice(json: TopicStart) {
   return authorized(async (auth) => {
     const res = await client["/v1/practice-sessions"].post({ ...auth, json });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -27,6 +29,7 @@ export function getPractice(id: string) {
       ...auth,
       params: { id },
     });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -40,6 +43,7 @@ export function answerPractice(id: string, json: Answer) {
       params: { id },
       json,
     });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -51,6 +55,7 @@ export function advancePractice(id: string, question_id: string) {
       params: { id },
       json: { question_id },
     });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -67,6 +72,7 @@ export function finishPractice(session: Practice) {
           ...auth,
           params: { id: session.id },
         });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });
@@ -77,6 +83,7 @@ export function reportQuestion(question_id: string, text: string) {
       ...auth,
       json: { question_id, text },
     });
+    await checkAccess(res);
     requireSuccess(res);
     return res.json();
   });

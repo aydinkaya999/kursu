@@ -4,10 +4,11 @@ from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, Select, Table, and_, func, or_, select
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.content import models as db
-from app.modules.content.schemas import LessonCard, LessonDetail, UnansweredQuestion
+from app.modules.content.schemas import LessonDetail
 
 
 async def records[T: BaseModel](
@@ -57,39 +58,49 @@ def lesson_catalogue() -> Select[Any]:
 
 
 async def lesson_detail(session: AsyncSession, lesson_id: str) -> LessonDetail | None:
-    # Read the header, ordered cards and checks from the same publication snapshot.
-    await session.connection(execution_options={"isolation_level": "REPEATABLE READ"})
-    detail_query = (
+    # Use one publication snapshot for the header, cards and check questions.
+    cards = db.lesson_cards.c
+    card = func.jsonb_build_object(
+        "position",
+        cards.position,
+        "kind",
+        cards.kind,
+        "title",
+        cards.title,
+        "blocks",
+        cards.blocks,
+        "tip",
+        cards.tip,
+    )
+    ordered_cards = (
+        select(func.jsonb_agg(aggregate_order_by(card, cards.position)))
+        .where(cards.lesson_id == db.lessons.c.id)
+        .correlate(db.lessons)
+        .scalar_subquery()
+    )
+    links, q = db.lesson_check_questions, db.questions.c
+    question = func.jsonb_build_object("id", q.id, "stem", q.stem, "options", q.options)
+    checks = (
+        select(func.jsonb_agg(aggregate_order_by(question, links.c.position)))
+        .join_from(links, db.questions)
+        .where(links.c.lesson_id == db.lessons.c.id)
+        .correlate(db.lessons)
+        .scalar_subquery()
+    )
+    query = (
         lesson_catalogue()
         .join_from(db.lessons, db.topics)
         .join_from(db.topics, db.subtests)
-        .add_columns(db.lessons.c.source, db.subtests.c.short_name.label("subtest"))
+        .add_columns(
+            db.lessons.c.source,
+            db.subtests.c.short_name.label("subtest"),
+            ordered_cards.label("cards"),
+            checks.label("check_questions"),
+        )
         .where(db.lessons.c.id == lesson_id)
     )
-    header = (await session.execute(detail_query)).mappings().one_or_none()
-    if header is None:
-        return None
-
-    cards = db.lesson_cards.c
-    card_rows = await records(
-        session,
-        select(cards.position, cards.kind, cards.title, cards.blocks, cards.tip)
-        .where(cards.lesson_id == lesson_id)
-        .order_by(cards.position),
-        LessonCard,
-    )
-    checks, q = db.lesson_check_questions, db.questions.c
-    questions = await records(
-        session,
-        select(q.id, q.stem, q.options)
-        .join_from(checks, db.questions)
-        .where(checks.c.lesson_id == lesson_id)
-        .order_by(checks.c.position),
-        UnansweredQuestion,
-    )
-    return LessonDetail.model_validate(
-        {**header, "cards": card_rows, "check_questions": questions}
-    )
+    row = (await session.execute(query)).mappings().one_or_none()
+    return LessonDetail.model_validate(row) if row else None
 
 
 def mock_catalogue() -> Select[Any]:

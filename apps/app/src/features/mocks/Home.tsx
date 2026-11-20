@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Label, Screen } from "../../components/Core";
 import { tr } from "../../i18n/tr";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import { Status } from "../placement/Status";
 import * as api from "./api";
 import { History, resultRoute, s } from "./shared";
@@ -16,6 +17,9 @@ export default function Home() {
   const start = useMutation({
     mutationFn: ({ id, mode }: { id: string; mode: api.Mode }) =>
       api.start(id, { mode }),
+    onError: (error) => {
+      if (isLimit(error)) router.push(limitRoute(error, "mock"));
+    },
     onSuccess: (a) =>
       router.push(
         a.submitted_at
@@ -31,7 +35,7 @@ export default function Home() {
       {!list.data && (
         <Status error={list.error} retry={() => void list.refetch()} />
       )}
-      {start.error && (
+      {start.error && !isLimit(start.error) && (
         <Status
           error={start.error}
           retry={() => {

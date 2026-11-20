@@ -1,12 +1,12 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select
-from study_support import practice_start
+from study_support import grant_pass, practice_start
 
 from app.cli import import_documents
 from app.core.http import ISTANBUL, server_now
@@ -79,7 +79,7 @@ def test_les_why_checks_source_retry_completion_and_ownership(
             for t in group["topics"]
             for lesson in t["lessons"]
         )
-        detail = c.get("/v1/lessons/" + LAW).json()
+        detail = c.get("/v1/lessons/" + LAW, headers=auth).json()
         assert (
             4 <= len(detail["cards"]) <= 6
             and detail["source"]["quote"]
@@ -185,6 +185,7 @@ def test_test_why_steps_misconception_blank_and_adaptive_selection(
 ) -> None:
     with TestClient(create_app(demo)) as c:
         who = guest(c)
+        grant_pass(c, who, engine, date.max)
         state = practice_start(c, who, "topic_test", TOPIC)
         key = state["id"]
         url = "/v1/practice-sessions/" + key
@@ -304,6 +305,7 @@ def test_topic_test_uses_updated_mastery_for_next_session(
 ) -> None:
     with TestClient(create_app(demo)) as c, engine.connect() as db:
         who = guest(c)
+        grant_pass(c, who, engine, date.max)
         first = practice_start(c, who, "topic_test", TOPIC)
         url = "/v1/practice-sessions/" + first["id"]
         before = db.scalar(
@@ -390,7 +392,7 @@ def test_quarantine_withdraws_dependent_lessons_mocks_and_saved_feedback(
         # Re-import the same offline bundles that originally published this question.
         asyncio.run(import_documents(demo, [sample, make_placeholders(sample)]))
         assert c.get(url, headers=users[0]).status_code == 409
-        assert c.get("/v1/lessons/" + lesson).status_code == 404
+        assert c.get("/v1/lessons/" + lesson, headers=users[0]).status_code == 404
         assert lesson not in {entry["id"] for entry in c.get("/v1/lessons").json()}
         assert mock not in {m["id"] for m in c.get("/v1/mocks").json()}
         assert lesson not in {
@@ -403,7 +405,7 @@ def test_quarantine_withdraws_dependent_lessons_mocks_and_saved_feedback(
         with engine.begin() as db:
             db.execute(reports.delete())
         asyncio.run(import_documents(demo, [make_placeholders(sample)]))
-        assert c.get("/v1/lessons/" + lesson).status_code == 404
+        assert c.get("/v1/lessons/" + lesson, headers=users[0]).status_code == 404
 
 
 def test_updated_lesson_starts_with_its_new_checks(demo: Settings, sample: Bundle) -> None:

@@ -80,7 +80,7 @@ After answering, the chosen option's rationale appears first. Other rationales, 
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports, mocks, progress and navigation at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports, mocks, progress, checkout and navigation at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
@@ -96,7 +96,7 @@ The seed supplies four teaching fields, all six AGS subtests, six topics, one le
 
 An offline bundle has `schema_version: 1` and the collections it wants to import. Each supplied entity has a stable ID. A supplied lesson includes its complete ordered cards and two check questions. A mock supplies 80 distinct `question_ids` in exam order. References can point to rows in the same bundle or to previously imported rows. Pass multiple files in dependency order. A schema violation, an invalid reference, or a failed database write rolls back the whole invocation. Importing an edited row updates it under its original ID. Omitted questions remain available to historical answers. Set `APP_ENV=production` on production imports to reject any bundle containing placeholders. [Bundle JSON Schema](content/schema/bundle-v1.schema.json)
 
-Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It lists fields, subtests in exam order, topics (optional `subtest_id`), lessons (optional `topic_id`) and mocks. `GET /v1/lessons/{id}` includes the source, ordered cards, and the stem and five options for each check question. The anonymous catalogue requires a published parent and published questions. An unavailable lesson ID returns HTTP 404.
+Start the API and open `http://localhost:8000/v1/docs` to try the catalogue. It lists fields, subtests in exam order, topics (optional `subtest_id`), lessons (optional `topic_id`) and mocks. `GET /v1/lessons/{id}` includes the source, ordered cards, and the stem and five options for each check question. List endpoints are public. Full lesson details require a guest or account token, charge the daily lesson allowance, and require a published parent and published questions. An unavailable lesson ID returns HTTP 404.
 
 Before publishing, include the cited article text for law material and one step per operation for quantitative questions. Re-import the updated seed when upgrading an M5 database. Older items with missing articles or quantitative steps become available for practice when their source data is completed. The seed quotes articles 4 and 8 from the Ministry's publication of Law No. 1739. [Official text](https://iegm.meb.gov.tr/meb_iys_dosyalar/2025_11/28150724_milliegitimtemelkanunu.pdf) · [Maths notation](docs/MATH_NOTATION.md)
 
@@ -104,15 +104,17 @@ Before publishing, include the cited article text for law material and one step 
 
 Open `/notebook` to see missed and uncertain answers grouped by topic or misconception. The server schedules reviews in Istanbul time, using the exam date and regular intervals from remote config. Each review asks a different question for the same objective. A wrong review resets the interval. Three consecutive correct reviews mark the entry learned. With fewer than 14 days until the exam the intervals shorten and every open entry is due by the eve of the exam. An entry without a published or eligible prerelease sibling stays in the notebook.
 
-Free accounts can view the notebook. Starting a due or early review requires a season pass. To exercise the paid path locally, copy your development user ID from the authenticated `GET /v1/me` response. Run `docker compose exec postgres psql -U kursu -d kursu`, then use the following in that local database. M9 adds checkout and purchase verification.
+Free candidates can view the notebook. Starting a review opens the season-pass offer.
 
-```sql
-\prompt 'Development user UUID: ' dev_user
-INSERT INTO entitlements (user_id, kind, source, valid_until)
-SELECT :'dev_user'::uuid, 'season_pass', 'web', (value #>> '{}')::date
-FROM remote_config WHERE key = 'results_date'
-ON CONFLICT (user_id, kind) DO UPDATE SET valid_until = EXCLUDED.valid_until;
-```
+## Season pass and free access
+
+Run `pnpm setup` to migrate the database and import the current server configuration. Start `pnpm dev:api` and `pnpm dev:app`. Open the package from a placement result, a reached allowance or a mock result. A guest can continue for free or sign in and return to the same offer.
+
+The API enforces the plan preview from the first plan date, daily distinct lessons and topic-test positions, the season's mock allowance, read-only notebook and summary progress. Daily counters reset at midnight in Europe/Istanbul. Resuming a mock keeps the original allowance. Submitted explanations, reports and the daily streak remain accessible. Migration 0009 initializes the counters from existing session, completion and answer history.
+
+The paywall reads the dates, limits and platform price from the API. Web prices are allocated in balanced randomized groups and each quote is saved. The development store prices are configured separately. Import updated values with `pnpm import-content content/seed/config.json`.
+
+In development or test, sign in and press **Sezon paketini al** to exercise the web checkout or signed iOS/Android test receipt. Checkout grants the same account access through the end of results day across all platforms. The synchronous test providers do not collect money. Production requires a real web checkout and signed store verification adapter before enabling sales. [Season configuration](content/seed/config.json)
 
 ## Repository
 
@@ -122,4 +124,4 @@ ON CONFLICT (user_id, kind) DO UPDATE SET valid_until = EXCLUDED.valid_until;
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md) · [M8 mock exams](.agent/plans/M8-mock-exams.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md) · [M8 mock exams](.agent/plans/M8-mock-exams.md) · [M9 season pass](.agent/plans/M9-season-pass.md)

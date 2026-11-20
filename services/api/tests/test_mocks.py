@@ -1,9 +1,10 @@
 import asyncio
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, func, select, update
+from study_support import grant_pass
 from test_plan import signin
 
 from app.core.db import Database
@@ -26,6 +27,7 @@ def test_mock_navigation_grading_withdrawal_and_progress(
     now = datetime(2027, 2, 7, 12, tzinfo=ISTANBUL)
     with TestClient(app) as c:
         auth = signin(c)
+        grant_pass(c, auth, engine, date.max)
         other = signin(c, False)
         app.dependency_overrides[server_now] = lambda: now
         listed = c.get("/v1/mocks").json()
@@ -153,7 +155,9 @@ def test_mock_navigation_grading_withdrawal_and_progress(
         assert c.get("/v1/progress", headers=auth).json()["net_change"] is not None
 
 
-def test_expiry_is_server_owned_and_job_is_idempotent(demo: Settings) -> None:
+def test_expiry_is_server_owned_and_job_is_idempotent(
+    demo: Settings, engine: Engine
+) -> None:
     now = datetime(2027, 2, 1, 10, tzinfo=ISTANBUL)
     app = create_app(demo)
 
@@ -167,6 +171,7 @@ def test_expiry_is_server_owned_and_job_is_idempotent(demo: Settings) -> None:
 
     with TestClient(app) as c:
         auth = signin(c, False)
+        grant_pass(c, auth, engine, date.max)
         app.dependency_overrides[server_now] = lambda: now
         exams = c.get("/v1/mocks").json()
         attempts = [

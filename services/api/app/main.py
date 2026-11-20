@@ -10,6 +10,7 @@ from app.core.http import ApiError, ErrorBody, handle_error
 from app.core.settings import Settings
 from app.modules.accounts.access import router as access_router
 from app.modules.accounts.router import router as account_router
+from app.modules.commerce.router import router as commerce_router
 from app.modules.content.router import router as catalogue_router
 from app.modules.mocks.router import router as mock_router
 from app.modules.notebook.router import router as notebook_router
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for router in (
         account_router,
         access_router,
+        commerce_router,
         mock_router,
         notebook_router,
         placement_router,

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Screen, Button, Label } from "../../components/Core";
 import { tr } from "../../i18n/tr";
-import { RequestFailure } from "../../lib/session";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import { formatDuration } from "../../lib/format";
 import { startPractice } from "../study/api";
 import { StudyStatus } from "../study/StudyStatus";
@@ -41,6 +41,7 @@ export default function TaskDetail() {
     refetchOnWindowFocus: false,
   });
   const back = () => router.dismissTo("/today");
+  if (isLimit(q.error)) return <Redirect href={limitRoute(q.error, "today")} />;
   if (!task || q.error)
     return (
       <StudyStatus
@@ -65,13 +66,8 @@ export default function TaskDetail() {
       />
     );
   if (practiceTask) {
-    if (
-      practice.error instanceof RequestFailure &&
-      practice.error.status === 403
-    )
-      return (
-        <Redirect href={{ pathname: "/paywall", params: { from: "today" } }} />
-      );
+    if (isLimit(practice.error))
+      return <Redirect href={limitRoute(practice.error, "today")} />;
     if (!practice.data || practice.error)
       return (
         <StudyStatus

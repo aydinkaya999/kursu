@@ -327,6 +327,7 @@ def test_daily_history_merge_preserves_completed_days_without_duplicate_tasks(
 ) -> None:
     client, _, _ = auth_app
     guest, _ = new_guest(client)
+    grant_pass(client, guest, engine, date.max)
     # Keep the real-clock account journey within a study season on future CI runs.
     from app.core.http import ISTANBUL
     from app.modules.content.models import remote_config

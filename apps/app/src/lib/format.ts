@@ -86,6 +86,16 @@ function finalWord(value: number): string {
   if (n % 100) return tens[Math.floor(n / 10) % 10]!;
   return "yüz";
 }
+export function formatUntilDate(isoDate: string) {
+  const word = finalWord(Number(isoDate.slice(0, 4)));
+  const vowel = word.match(/[aeıioöuü]/g)!.at(-1)!;
+  return (
+    formatDate(isoDate) +
+    "'" +
+    (/[aeıioöuü]$/.test(word) ? "y" : "") +
+    ("aıou".includes(vowel) ? "a" : "e")
+  );
+}
 export function numberSuffix(
   value: number,
   form: "possessive" | "accusative" = "possessive",

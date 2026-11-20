@@ -87,9 +87,9 @@ def main() -> None:
 
         app = create_app()
 
-        @app.post("/fixtures/paid-review")
-        async def paid_review(db: Session, user: CurrentUser, now: ServerTime) -> None:
-            """Exercise yesterday's real answer path in the isolated test schema."""
+        @app.post("/fixtures/season-pass")
+        async def season_pass(db: Session, user: CurrentUser) -> None:
+            """Grant a pass for the unlimited-plan browser journey."""
             await lock_user(db, user)
             until = await db.scalar(
                 select(remote_config.c.value).where(remote_config.c.key == "results_date")
@@ -102,6 +102,12 @@ def main() -> None:
                     valid_until=date.fromisoformat(str(until)),
                 )
             )
+            await db.commit()
+
+        @app.post("/fixtures/paid-review")
+        async def paid_review(db: Session, user: CurrentUser, now: ServerTime) -> None:
+            await season_pass(db, user)
+            await lock_user(db, user)
             yesterday = now - timedelta(days=1)
             state = await practice.start(
                 db,

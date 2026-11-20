@@ -4,12 +4,14 @@ from fastapi import APIRouter
 
 from app.core.http import ErrorBody, ServerTime, Session
 from app.modules.accounts.security import CurrentUser
+from app.modules.commerce.access import plan_access
 from app.modules.plan import service
 from app.modules.plan.schemas import PlanTask, Today
 
 router = APIRouter(
     tags=["Daily plan"],
     responses={
+        403: {"model": ErrorBody},
         401: {"model": ErrorBody},
         404: {"model": ErrorBody},
         409: {"model": ErrorBody},
@@ -20,6 +22,7 @@ router = APIRouter(
 
 @router.get("/plan/today", operation_id="getToday")
 async def today(user: CurrentUser, db: Session, now: ServerTime) -> Today:
+    await plan_access(db, user, now)
     result = await service.today(db, user, now)
     await db.commit()
     return result

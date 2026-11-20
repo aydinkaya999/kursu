@@ -4,7 +4,11 @@ import { Platform } from "react-native";
 import { client } from "./api";
 
 export class RequestFailure extends Error {
-  constructor(readonly status: number) {
+  constructor(
+    readonly status: number,
+    readonly code?: string,
+    readonly counter?: string,
+  ) {
     super("HTTP " + status);
   }
 }
@@ -12,6 +16,18 @@ export function requireSuccess<R extends { status: number }>(
   response: R,
 ): asserts response is R & { status: 200 } {
   if (response.status !== 200) throw new RequestFailure(response.status);
+}
+
+export async function checkAccess(response: {
+  status: number;
+  json(): Promise<unknown>;
+}) {
+  if (response.status !== 403) return;
+  const error = (await response.json()) as {
+    code?: string;
+    details?: { counter?: string };
+  };
+  throw new RequestFailure(response.status, error.code, error.details?.counter);
 }
 
 const web = Platform.OS === "web";

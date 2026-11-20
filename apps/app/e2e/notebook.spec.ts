@@ -97,7 +97,7 @@ test("a mistake opens the grouped notebook and a free review opens the pass scre
       .evaluate((body) => body.scrollWidth <= window.innerWidth),
   ).toBe(true);
   await page.getByRole("button", { name: t.early }).click();
-  await expect(page.getByRole("heading", { name: t.pass })).toBeVisible();
+  await expect(page.getByRole("heading", { name: t.passIntro })).toBeVisible();
   await page.getByRole("button", { name: t.continueFree }).click();
   await expect(page).toHaveURL(/\/notebook$/);
   await expect(page.getByText(t.counts(1, 0))).toBeVisible();

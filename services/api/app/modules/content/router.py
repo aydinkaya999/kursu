@@ -2,7 +2,9 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from app.core.http import Session
+from app.core.http import ErrorBody, ServerTime, Session
+from app.modules.accounts.security import CurrentUser
+from app.modules.commerce.access import use
 from app.modules.content import models as db
 from app.modules.content.schemas import (
     LessonDetail,
@@ -19,6 +21,7 @@ from app.modules.content.service import (
     mock_catalogue,
     records,
 )
+from app.modules.placement.service import lock_user
 
 router = APIRouter(tags=["Catalogue"])
 
@@ -58,13 +61,22 @@ async def list_lessons(
     operation_id="getLesson",
     response_model=LessonDetail,
     response_model_exclude_unset=True,
-    responses={404: {"model": NotFound}},
+    responses={
+        401: {"model": ErrorBody},
+        403: {"model": ErrorBody},
+        404: {"model": NotFound},
+    },
 )
-async def get_lesson(id: str, session: Session) -> LessonDetail | JSONResponse:
+async def get_lesson(
+    id: str, session: Session, user: CurrentUser, now: ServerTime
+) -> LessonDetail | JSONResponse:
+    await lock_user(session, user)
     lesson = await lesson_detail(session, id)
     if lesson is None:
         error = NotFound(code="not_found", message="Lesson not found", details={})
         return JSONResponse(status_code=404, content=error.model_dump())
+    await use(session, user, now, "lessons_per_day", id)
+    await session.commit()
     return lesson
 
 

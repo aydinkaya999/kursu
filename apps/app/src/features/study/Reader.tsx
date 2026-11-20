@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { tr } from "../../i18n/tr";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import { getLesson } from "./api";
 import { origin, leave, useStartPractice } from "./navigation";
 import { StudyCard } from "./StudyCard";
@@ -26,6 +27,7 @@ export default function Reader() {
     if (review && router.canGoBack()) router.back();
     else leave(source);
   }
+  if (isLimit(q.error)) return <Redirect href={limitRoute(q.error, source)} />;
   if (!q.data || q.error)
     return (
       <StudyStatus

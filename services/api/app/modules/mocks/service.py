@@ -8,6 +8,7 @@ from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL, ApiError
+from app.modules.commerce import access
 from app.modules.content import models as content
 from app.modules.content.schemas import UnansweredQuestion
 from app.modules.content.service import mock_catalogue
@@ -94,6 +95,7 @@ async def start(
     if len(bank) != 80:
         raise ApiError(409, "content_unavailable", "Mock question bank incomplete")
     attempt = uuid4()
+    await access.use(db, user, now, "mock_exams", str(attempt))
     row = (
         (
             await db.execute(

@@ -1,5 +1,5 @@
 import { client } from "../../lib/api";
-import { authorized, requireSuccess } from "../../lib/session";
+import { authorized, checkAccess, requireSuccess } from "../../lib/session";
 export type Mode = "timed" | "practice";
 type Save = NonNullable<
   Parameters<
@@ -34,6 +34,7 @@ export function start(id: string, json: { mode: Mode }) {
       params: { id },
       json,
     });
+    await checkAccess(response);
     requireSuccess(response);
     return response.json();
   });

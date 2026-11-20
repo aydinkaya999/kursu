@@ -3,6 +3,7 @@ import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Button, Label, Screen } from "../../components/Core";
 import { tr } from "../../i18n/tr";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import { RequestFailure } from "../../lib/session";
 import { Question } from "../placement/TestScreen";
 import { Status } from "../placement/Status";
@@ -75,15 +76,17 @@ export default function PracticeScreen() {
       setReviewedQuestion(null);
     },
     onError: async (error) => {
+      if (isLimit(error)) {
+        router.replace(limitRoute(error, source));
+        return;
+      }
       if (error instanceof RequestFailure && [403, 409].includes(error.status))
         await q.refetch();
     },
   });
   const back = () => void close();
-  if (q.error instanceof RequestFailure && q.error.status === 403)
-    return (
-      <Redirect href={{ pathname: "/paywall", params: { from: source } }} />
-    );
+  if (isLimit(q.error) || isLimit(lesson.error))
+    return <Redirect href={limitRoute(q.error ?? lesson.error, source)} />;
   if (!session || q.error)
     return (
       <StudyStatus
@@ -155,6 +158,10 @@ export default function PracticeScreen() {
           try {
             await accept(await answerPractice(sessionId, data));
           } catch (e) {
+            if (isLimit(e)) {
+              router.replace(limitRoute(e, source));
+              return;
+            }
             if (e instanceof RequestFailure && [403, 409].includes(e.status))
               await q.refetch();
             throw e;

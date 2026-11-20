@@ -14,6 +14,7 @@ import { formatDuration, formatRange } from "../../lib/format";
 import { colors, radius, size, space } from "../../theme";
 import { placementResult, type Result } from "./api";
 import { useMe } from "./queries";
+import { wallRoute } from "../commerce/navigation";
 import { StatusScreen } from "./Status";
 const t = tr.result;
 export default function ResultScreen() {
@@ -43,7 +44,14 @@ export default function ResultScreen() {
     <ResultView
       result={result.data}
       onGuest={() => router.replace("/today")}
-      onSignup={() => router.push("/auth")}
+      onSignup={() =>
+        me.data?.is_guest === false
+          ? router.push(wallRoute({ source: "placement", from: "today" }))
+          : router.push({
+              pathname: "/auth",
+              params: { next: "paywall", source: "placement", from: "today" },
+            })
+      }
     />
   );
 }

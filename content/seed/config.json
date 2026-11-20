@@ -14,6 +14,7 @@
       }
     },
     { "key": "web_price_groups_try", "value": [790, 990, 1290] },
+    { "key": "native_prices_try", "value": { "ios": 990, "android": 990 } },
     { "key": "mock_day", "value": "sunday" },
     { "key": "review_intervals_days", "value": [1, 3, 7, 14, 30] }
   ]

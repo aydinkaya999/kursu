@@ -9,6 +9,7 @@ from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL, ApiError
+from app.modules.commerce.access import entitlement
 from app.modules.content import models as content
 from app.modules.notebook.models import entitlements, entries
 from app.modules.notebook.rules import Calendar, Schedule, transition
@@ -37,12 +38,7 @@ async def calendar(db: AsyncSession) -> Calendar:
 
 
 async def require_pass(db: AsyncSession, user: UUID, day: date) -> None:
-    c = entitlements.c
-    if not await db.scalar(
-        select(c.user_id).where(
-            c.user_id == user, c.kind == "season_pass", c.valid_until >= day
-        )
-    ):
+    if not (await entitlement(db, user, day)).active:
         raise ApiError(403, "entitlement_required", "Review requires a season pass")
 
 

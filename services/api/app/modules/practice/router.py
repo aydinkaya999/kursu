@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.core.http import ErrorBody, ServerTime, Session
+from app.core.http import ApiError, ErrorBody, ServerTime, Session
 from app.modules.accounts.security import CurrentUser
 from app.modules.notebook.schemas import ReviewStart
 from app.modules.placement.schemas import Submission
@@ -54,7 +54,14 @@ async def answer(
     id: UUID, data: Submission, db: Session, user: CurrentUser, now: ServerTime
 ) -> Practice:
     await lock_user(db, user)
-    result = await service.answer(db, user, id, data, now)
+    try:
+        result = await service.answer(db, user, id, data, now)
+    except ApiError as error:
+        # A blank may move to the next position. Persist the accepted answer when
+        # its successor is the first question beyond the daily allowance.
+        if error.body.code == "free_limit_reached":
+            await db.commit()
+        raise
     await db.commit()
     return result
 

@@ -83,6 +83,33 @@ export const tr = {
       "Ücretsiz sürümde yanlış defterini görebilirsin. Sezon paketiyle tekrar sorularını çözebilirsin.",
     continueFree: "Ücretsiz sürümle devam et",
   },
+  commerce: {
+    plan: "Günlük program",
+    questions: "Konu soruları",
+    mock: "Tam deneme",
+    features: "Özellik",
+    free: "Ücretsiz",
+    first: (n: number) => "İlk " + n + " gün",
+    perDay: (n: number) => "Günde " + n,
+    untilExam: "Sınava kadar",
+    unlimited: "Sınırsız",
+    all: "Tümü",
+    valid: (d: string) =>
+      "Paket, sonuçların açıklanacağı " +
+      d +
+      " kadar geçerlidir. Web, iOS ve Android'de aynı hesapla kullanılır.",
+    tax: "tek ödeme · KDV dahil",
+    buy: "Sezon paketini al",
+    active: "Sezon paketin etkin",
+    see: "Sezon paketini gör",
+    disclaimer:
+      "Kürsü atanma ya da puan garantisi vermez. Tahminler aralık olarak gösterilir.",
+    limit: "Bugünkü ücretsiz sınırına ulaştın.",
+    tomorrow: "Yarın devam et",
+    planEnded: "Ücretsiz program süren doldu.",
+    mocks: "Sezon paketiyle tüm denemeler açılır.",
+    unavailable: "Satın alma şu anda kullanılamıyor.",
+  },
   mock: {
     meta: "80 soru · 110 dk",
     timed: "Süreli başla",

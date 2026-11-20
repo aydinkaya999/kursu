@@ -5,7 +5,6 @@ import Notebook, {
   NotebookRows,
   NotebookStatus,
 } from "../src/features/notebook/Notebook";
-import Paywall from "../app/paywall";
 import {
   notebookGroups,
   notebookSummary,
@@ -134,11 +133,4 @@ test("the notebook requests the selected grouping and opens its scoped review", 
   });
   await fireEvent.press(button(tr.nav.back));
   expect(router.dismissTo).toHaveBeenCalledWith("/today");
-});
-
-test("free candidates can return to the notebook from the pass screen", async () => {
-  await render(<Paywall />);
-  expect(screen.getByRole("header", { name: t.pass })).toBeVisible();
-  await fireEvent.press(button(t.continueFree));
-  expect(router.dismissTo).toHaveBeenCalledWith("/notebook");
 });

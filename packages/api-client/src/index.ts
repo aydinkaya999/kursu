@@ -20,6 +20,10 @@ export type ApiDocument = {
         "title": "Advance",
         "type": "object"
       },
+      "Allowance": {
+        "minimum": 0.0,
+        "type": "integer"
+      },
       "Attempt": {
         "properties": {
           "blank": {
@@ -193,6 +197,43 @@ export type ApiDocument = {
           "code"
         ],
         "title": "EmailVerify",
+        "type": "object"
+      },
+      "Entitlement": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Platform"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "active",
+          "valid_until",
+          "source"
+        ],
+        "title": "Entitlement",
         "type": "object"
       },
       "ErrorBody": {
@@ -703,6 +744,30 @@ export type ApiDocument = {
         ],
         "type": "string"
       },
+      "Limits": {
+        "properties": {
+          "lessons_per_day": {
+            "$ref": "#/components/schemas/Allowance"
+          },
+          "mock_exams": {
+            "$ref": "#/components/schemas/Allowance"
+          },
+          "plan_days": {
+            "$ref": "#/components/schemas/Allowance"
+          },
+          "questions_per_day": {
+            "$ref": "#/components/schemas/Allowance"
+          }
+        },
+        "required": [
+          "plan_days",
+          "lessons_per_day",
+          "questions_per_day",
+          "mock_exams"
+        ],
+        "title": "Limits",
+        "type": "object"
+      },
       "MasteryState": {
         "enum": [
           "not_started",
@@ -787,6 +852,33 @@ export type ApiDocument = {
           "practice"
         ],
         "type": "string"
+      },
+      "Native": {
+        "enum": [
+          "ios",
+          "android"
+        ],
+        "type": "string"
+      },
+      "NativePurchase": {
+        "additionalProperties": false,
+        "properties": {
+          "platform": {
+            "$ref": "#/components/schemas/Native"
+          },
+          "receipt": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Receipt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "platform",
+          "receipt"
+        ],
+        "title": "NativePurchase",
+        "type": "object"
       },
       "NetRange": {
         "properties": {
@@ -957,6 +1049,54 @@ export type ApiDocument = {
           "section"
         ],
         "title": "NotesSource",
+        "type": "object"
+      },
+      "Paywall": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/Entitlement"
+          },
+          "amount_try": {
+            "title": "Amount Try",
+            "type": "integer"
+          },
+          "checkout_available": {
+            "title": "Checkout Available",
+            "type": "boolean"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/Platform"
+          },
+          "results_date": {
+            "format": "date",
+            "title": "Results Date",
+            "type": "string"
+          },
+          "sandbox_receipt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sandbox Receipt"
+          }
+        },
+        "required": [
+          "results_date",
+          "limits",
+          "amount_try",
+          "platform",
+          "access",
+          "checkout_available",
+          "sandbox_receipt"
+        ],
+        "title": "Paywall",
         "type": "object"
       },
       "Placement": {
@@ -1199,6 +1339,14 @@ export type ApiDocument = {
         ],
         "title": "PlanTask",
         "type": "object"
+      },
+      "Platform": {
+        "enum": [
+          "web",
+          "ios",
+          "android"
+        ],
+        "type": "string"
       },
       "Position": {
         "properties": {
@@ -3685,6 +3833,82 @@ export type ApiDocument = {
         ]
       }
     },
+    "/v1/entitlements": {
+      "get": {
+        "operationId": "getEntitlements",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entitlement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Entitlements",
+        "tags": [
+          "Commerce"
+        ]
+      }
+    },
     "/v1/fields": {
       "get": {
         "operationId": "listFields",
@@ -3816,6 +4040,26 @@ export type ApiDocument = {
             },
             "description": "Successful Response"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -3837,6 +4081,11 @@ export type ApiDocument = {
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Lesson",
         "tags": [
           "Catalogue"
@@ -5200,6 +5449,93 @@ export type ApiDocument = {
         ]
       }
     },
+    "/v1/paywall": {
+      "get": {
+        "operationId": "getPaywall",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "platform",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Platform",
+              "default": "web"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Paywall"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Paywall",
+        "tags": [
+          "Commerce"
+        ]
+      }
+    },
     "/v1/placement": {
       "post": {
         "operationId": "startPlacement",
@@ -5584,6 +5920,16 @@ export type ApiDocument = {
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5671,6 +6017,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -5845,6 +6201,16 @@ export type ApiDocument = {
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -6427,6 +6793,168 @@ export type ApiDocument = {
         "summary": "Get Progress",
         "tags": [
           "Mocks and progress"
+        ]
+      }
+    },
+    "/v1/purchases/native/verify": {
+      "post": {
+        "operationId": "verifyStorePurchase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NativePurchase"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entitlement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify",
+        "tags": [
+          "Commerce"
+        ]
+      }
+    },
+    "/v1/purchases/web/checkout": {
+      "post": {
+        "operationId": "webCheckout",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entitlement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Checkout",
+        "tags": [
+          "Commerce"
         ]
       }
     },

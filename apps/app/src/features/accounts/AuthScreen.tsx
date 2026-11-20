@@ -14,16 +14,27 @@ import {
   finishProvider,
   type Provider,
 } from "./api";
+import {
+  leaveWall,
+  storeReturn,
+  takeReturn,
+  wallRoute,
+  type Destination,
+} from "../commerce/navigation";
 import { getMe } from "../placement/api";
 
 const t = tr.account;
 export default function AuthScreen() {
   const cache = useQueryClient();
-  const { provider, state, cancel } = useLocalSearchParams<{
-    provider?: Provider;
-    state?: string;
-    cancel?: string;
-  }>();
+  const { provider, state, cancel, next, from, source, attemptId, counter } =
+    useLocalSearchParams<
+      Destination & {
+        next?: string;
+        provider?: Provider;
+        state?: string;
+        cancel?: string;
+      }
+    >();
   const [step, setStep] = useState<"choose" | "email" | "code">("choose");
   const [email, setEmail] = useState(""),
     [code, setCode] = useState("");
@@ -31,13 +42,22 @@ export default function AuthScreen() {
     [error, setError] = useState("");
   const running = useRef(false),
     handled = useRef("");
-  const finish = useCallback(async () => {
-    await cache.cancelQueries();
-    cache.clear();
-    const me = await getMe();
-    cache.setQueryData(["me"], me);
-    router.replace(me.profile ? "/today" : "/onboarding");
-  }, [cache]);
+  const finish = useCallback(
+    async (oauthState?: string) => {
+      await cache.cancelQueries();
+      cache.getMutationCache().clear();
+      await cache.resetQueries();
+      const me = await getMe();
+      cache.setQueryData(["me"], me);
+      const saved = oauthState ? await takeReturn(oauthState) : undefined;
+      if (next === "paywall" || saved)
+        router.replace(
+          wallRoute(saved ?? { from, source, attemptId, counter }),
+        );
+      else router.replace(me.profile ? "/today" : "/onboarding");
+    },
+    [cache, next, from, source, attemptId, counter],
+  );
   const run = useCallback(async (action: () => Promise<void>) => {
     if (running.current) return;
     running.current = true;
@@ -71,13 +91,15 @@ export default function AuthScreen() {
       handled.current = state;
       void run(async () => {
         await finishProvider(provider, state);
-        await finish();
+        await finish(state);
       });
     }
   }, [provider, state, cancel, finish, run]);
   const social = (provider: Provider) =>
     run(async () => {
       const info = await startProvider(provider);
+      if (next === "paywall")
+        await storeReturn(info.state, { from, source, attemptId, counter });
       if (Platform.OS === "web") {
         window.location.assign(info.authorization_url);
         return;
@@ -95,7 +117,7 @@ export default function AuthScreen() {
           return;
         handled.current = info.state;
         await finishProvider(provider, info.state);
-        await finish();
+        await finish(info.state);
       }
     });
   const send = () =>
@@ -192,7 +214,11 @@ export default function AuthScreen() {
         underline
         label={tr.result.guest}
         disabled={busy}
-        onPress={() => router.replace("/today")}
+        onPress={() =>
+          next === "paywall" && source !== "placement"
+            ? leaveWall({ from, source, attemptId, counter })
+            : router.replace("/today")
+        }
       />
     </Screen>
   );

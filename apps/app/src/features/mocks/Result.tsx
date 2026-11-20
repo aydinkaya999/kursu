@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import {
   Button,
@@ -15,6 +15,8 @@ import { Chip, InfoBox } from "../../components/Indicators";
 import { tr } from "../../i18n/tr";
 import { formatDate, formatNumber, inflectedNumber } from "../../lib/format";
 import { colors } from "../../theme";
+import { entitlement } from "../commerce/api";
+import { wallRoute } from "../commerce/navigation";
 import { StudyStatus } from "../study/StudyStatus";
 import * as api from "./api";
 import { s } from "./shared";
@@ -26,6 +28,13 @@ export default function Result() {
     queryFn: () => api.result(id),
     retry: false,
   });
+  const pass = useQuery({ queryKey: ["entitlement"], queryFn: entitlement });
+  const refreshPass = pass.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      void refreshPass();
+    }, [refreshPass]),
+  );
   const cache = useQueryClient();
   useEffect(() => {
     if (q.data)
@@ -124,6 +133,24 @@ export default function Result() {
         variant="text"
         onPress={() => router.dismissTo("/progress")}
       />
+      {pass.data && !pass.data.active && (
+        <Card style={s.card}>
+          <Label>{tr.commerce.mocks}</Label>
+          <Button
+            variant="secondary"
+            label={tr.commerce.see}
+            onPress={() =>
+              router.push(
+                wallRoute({
+                  from: "result",
+                  source: "mock_result",
+                  attemptId: id,
+                }),
+              )
+            }
+          />
+        </Card>
+      )}
     </Screen>
   );
 }

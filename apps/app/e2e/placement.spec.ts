@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { tr } from "../src/i18n/tr";
+import { signUp } from "./email-flow";
 import { css, showReference } from "./reference";
 
 test("a guest completes onboarding, resumes the same question and receives a first-week plan", async ({
@@ -129,8 +130,12 @@ test("a guest completes onboarding, resumes the same question and receives a fir
     page.getByRole("heading", { name: tr.result.title }),
   ).toBeVisible();
   await page.getByRole("button", { name: tr.result.signup }).click();
-  await expect(page).toHaveURL(/\/auth$/);
-  await page.getByRole("button", { name: tr.result.guest }).click();
+  await expect(page).toHaveURL(/\/auth\?.*next=paywall/);
+  await signUp(page);
+  await expect(
+    page.getByRole("heading", { name: tr.notebook.passIntro }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: tr.notebook.continueFree }).click();
   await expect(
     page.getByRole("button", { name: tr.draft.viewResult }),
   ).toBeVisible();

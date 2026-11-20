@@ -17,7 +17,17 @@ test("Today opens the server's next task, credits completion and responds to a n
     (r) => new URL(r.url()).pathname === "/v1/plan/today" && r.status() === 200,
   );
   await page.getByRole("button", { name: tr.onboarding.explore }).click();
-  const original: Day = await (await response).json();
+  const fetched = await response;
+  const original: Day = await fetched.json();
+  const authorization = await fetched.request().headerValue("authorization");
+  expect(
+    (
+      await page.request.post(
+        new URL(fetched.url()).origin + "/fixtures/season-pass",
+        { headers: { authorization: authorization! } },
+      )
+    ).ok(),
+  ).toBe(true);
   const t = tr.today;
   await expect(
     page.getByRole("heading", { name: t.title(original.total) }),

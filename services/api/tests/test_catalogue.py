@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, Table, select, update
+from test_practice import guest
 
 from app.core.settings import Settings
 from app.main import create_app
@@ -76,7 +77,7 @@ def test_why_6_check_questions_expose_only_unanswered_fields(
 ) -> None:
     lesson = sample["lessons"][0]
     with TestClient(create_app(seeded)) as client:
-        response = client.get(f"/v1/lessons/{lesson['id']}")
+        response = client.get(f"/v1/lessons/{lesson['id']}", headers=guest(client))
     assert response.status_code == 200
     detail = response.json()
     assert detail["title"] == lesson["title"]
@@ -110,7 +111,8 @@ def test_cnt_1_hidden_items_and_their_questions_are_unavailable(
             conn.execute(update(table).where(table.c.id == key).values(status=status))
 
     with TestClient(create_app(demo)) as client:
-        unknown = client.get("/v1/lessons/unknown")
+        auth = guest(client)
+        unknown = client.get("/v1/lessons/unknown", headers=auth)
         assert unknown.status_code == 404
         assert unknown.json()["code"] == "not_found"
 
@@ -120,7 +122,7 @@ def test_cnt_1_hidden_items_and_their_questions_are_unavailable(
             assert (lesson in [item["id"] for item in lessons.json()]) == visible
             assert (mock in [item["id"] for item in mocks.json()]) == visible
             assert set(mocks.json()[0]) == {"id", "title", "published_at", "is_placeholder"}
-            detail = client.get(f"/v1/lessons/{lesson}")
+            detail = client.get(f"/v1/lessons/{lesson}", headers=auth)
             if visible:
                 assert detail.status_code == 200
             else:

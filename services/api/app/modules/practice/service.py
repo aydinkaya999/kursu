@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL, ApiError
 from app.modules.accounts.models import profiles
+from app.modules.commerce import access
 from app.modules.content import models as content
 from app.modules.content.schemas import UnansweredQuestion
 from app.modules.content.service import has_practice_feedback, lesson_catalogue
@@ -43,7 +44,7 @@ async def load(db: AsyncSession, user: UUID, key: UUID, now: datetime) -> RowMap
     )
     if row is None:
         raise ApiError(404, "not_found", "Practice session not found")
-    if row["kind"] == "review":
+    if row["kind"] == "review" and row["state"] != "feedback":
         await notebook.require_pass(db, user, now.astimezone(ISTANBUL).date())
     return row
 
@@ -139,6 +140,15 @@ async def current_question(db: AsyncSession, row: RowMapping) -> RowMapping | No
     return item
 
 
+async def charge_question(db: AsyncSession, row: RowMapping, now: datetime) -> None:
+    if row["kind"] == "topic_test":
+        await access.use(
+            db, row["user_id"], now, "questions_per_day", f"{row['id']}:{row['position']}"
+        )
+    elif row["lesson_id"]:
+        await access.use(db, row["user_id"], now, "lessons_per_day", row["lesson_id"])
+
+
 async def presented(db: AsyncSession, user: UUID, key: UUID, now: datetime) -> Practice:
     while True:
         row = await load(db, user, key, now)
@@ -153,6 +163,7 @@ async def presented(db: AsyncSession, user: UUID, key: UUID, now: datetime) -> P
     result.topic_id = item["topic_id"]
     result.subtest = item["short_name"]
     if result.state == "question":
+        await charge_question(db, row, now)
         result.question = UnansweredQuestion.model_validate(item)
     else:
         saved = (
@@ -405,6 +416,7 @@ async def answer(
     if q is None:
         raise ApiError(409, "content_unavailable", "Question withdrawn")
     await require_current_lesson(db, row)
+    await charge_question(db, row, now)
     choice = data.selected_option
     correct = choice == q["correct_option"] if choice else None
     key_answer = uuid4()

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RequestFailure } from "../../lib/session";
+import { isLimit, limitRoute } from "../commerce/navigation";
 import { startPractice, type TopicStart } from "./api";
 
 export type Origin = "lessons" | "today" | "notebook";
@@ -15,13 +15,8 @@ export function useStartPractice(from: Origin, replace = false) {
   return useMutation({
     mutationFn: (data: TopicStart) => startPractice(data),
     networkMode: "always",
-    onError: (error, data) => {
-      if (
-        data.kind === "review" &&
-        error instanceof RequestFailure &&
-        error.status === 403
-      )
-        router.push({ pathname: "/paywall", params: { from } });
+    onError: (error) => {
+      if (isLimit(error)) router.push(limitRoute(error, from));
     },
     onSuccess: (session) => {
       cache.setQueryData(["practice", session.id], session);

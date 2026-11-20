@@ -121,6 +121,7 @@ def test_plan_1_8_10_tasks_dates_and_streak(demo: Settings, engine: Engine) -> N
     app = create_app(demo)
     with TestClient(app) as c:
         user = signin(c)
+        grant_pass(c, user, engine, date.max)
         other = signin(c, False)
         now = datetime(2027, 2, 1, 11, tzinfo=ISTANBUL)
         app.dependency_overrides[server_now] = lambda: now
@@ -300,6 +301,7 @@ def test_plan_9_deferred_tasks_return_on_their_assigned_dates(
     app = create_app(demo)
     with TestClient(app) as c:
         auth = signin(c)
+        grant_pass(c, auth, engine, date.max)
         clock = datetime(2027, 2, 1, 9, tzinfo=ISTANBUL)
         app.dependency_overrides[server_now] = lambda: clock
 

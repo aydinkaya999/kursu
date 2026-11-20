@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.http import ISTANBUL, ApiError
 from app.modules.accounts.models import profiles
+from app.modules.commerce.access import plan_access
 from app.modules.content.models import remote_config
 from app.modules.notebook.service import require_pass
 from app.modules.placement.service import lock_user
@@ -380,6 +381,7 @@ async def task_action(
 ) -> PlanTask:
     if action:
         await lock_user(db, user)
+    await plan_access(db, user, now)
     if action == "start":
         await recompute_existing(db, user, now)
     row = (
