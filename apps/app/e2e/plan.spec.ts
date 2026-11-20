@@ -44,7 +44,7 @@ test("Today opens the server's next task, credits completion and responds to a n
     await css(ref.locator("h1"), ["font-size", "line-height"]),
   );
   await ref.close();
-  await expect(page.getByText("Fotoğraftan soru çöz")).toHaveCount(0);
+  await expect(page.getByText(tr.photo.tile)).toBeVisible();
   await expect(page.getByText("Türkiye geneli deneme 1")).toHaveCount(0);
   if (info.project.name === "desktop")
     await expect(

@@ -32,6 +32,14 @@ async def merge_study(db: AsyncSession, source: UUID, target: UUID) -> None:
         await db.execute(select(reports).where(reports.c.user_id == source))
     ).mappings():
         await db.execute(
-            insert(reports).values({**row, "user_id": target}).on_conflict_do_nothing()
+            insert(reports)
+            .values(
+                user_id=target,
+                question_id=row["question_id"],
+                photo_solution_id=row["photo_solution_id"],
+                text=row["text"],
+                created_at=row["created_at"],
+            )
+            .on_conflict_do_nothing()
         )
     await learning.refresh(db, target)

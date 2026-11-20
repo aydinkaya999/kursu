@@ -1,0 +1,12 @@
+{
+  "is_placeholder": true,
+  "in_scope": true,
+  "confidence": 1.0,
+  "topic_id": "legislation.law-1739-principles",
+  "question": "[ÖRNEK] Bir okul, atölye malzemelerini almakta zorlanan öğrencilerin masrafını karşılıyor. Bu destek hangi eğitim ilkesine örnektir?",
+  "steps": [
+    { "title": "Desteğin amacını belirle", "text": "Malzeme gideri, bazı öğrencilerin aynı atölyeye katılmasını güçleştiriyor." },
+    { "title": "Uygun ilkeyi seç", "text": "Okul, maddi engeli kaldırarak bu öğrencilerin de eğitim olanağından yararlanmasını sağlıyor." }
+  ],
+  "answer": "Fırsat ve imkân eşitliği"
+}

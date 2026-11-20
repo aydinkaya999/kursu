@@ -24,7 +24,7 @@ def sample() -> Bundle:
 
 
 @pytest.fixture
-def catalogue_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
+def catalogue_db(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[Settings]:
     # Run the actual migration chain in a private namespace in the real PostgreSQL DB.
     url = make_url(Settings().database_url)
     schema = f"test_catalogue_{uuid4().hex}"
@@ -35,6 +35,7 @@ def catalogue_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
         isolated = url.update_query_dict({"options": f"-csearch_path={schema}"})
         monkeypatch.setenv("DATABASE_URL", isolated.render_as_string(hide_password=False))
         monkeypatch.setenv("APP_ENV", "development")
+        monkeypatch.setenv("PHOTO_STORAGE_DIR", str(tmp_path / "photos"))
         monkeypatch.setenv("JWT_SECRET", secrets.token_urlsafe(48))
         command.upgrade(
             Config(str(Path(__file__).resolve().parents[1] / "alembic.ini")), "head"

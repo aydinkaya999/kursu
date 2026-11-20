@@ -15,6 +15,7 @@ from app.modules.accounts.models import (
 from app.modules.commerce.service import merge as merge_commerce
 from app.modules.mocks.models import attempts as mock_attempts
 from app.modules.notebook.service import merge as merge_notebook
+from app.modules.photos.models import solutions
 from app.modules.placement.models import answers, attempts
 from app.modules.plan.merge import merge_plans
 from app.modules.practice.merge import merge_study
@@ -63,6 +64,15 @@ async def merge(db: AsyncSession, source: UUID, target: UUID) -> None:
         update(mock_attempts)
         .where(mock_attempts.c.user_id == source)
         .values(user_id=target)
+    )
+    used_ids = select(solutions.c.request_id).where(solutions.c.user_id == target)
+    await db.execute(
+        update(solutions)
+        .where(solutions.c.user_id == source, solutions.c.request_id.in_(used_ids))
+        .values(request_id=func.gen_random_uuid())
+    )
+    await db.execute(
+        update(solutions).where(solutions.c.user_id == source).values(user_id=target)
     )
     await merge_commerce(db, source, target)
     await merge_study(db, source, target)

@@ -56,6 +56,7 @@ async def offer(
     return Paywall(
         results_date=cfg.results_date,
         limits=cfg.free_limits,
+        photo_limits=cfg.photo_limits,
         platform=platform,
         amount_try=await web_price(db, user, cfg.web_price_groups_try)
         if platform == "web"

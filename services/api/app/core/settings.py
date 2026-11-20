@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,6 +14,8 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://kursu:kursu_local@127.0.0.1:5432/kursu"
     jwt_secret: SecretStr = SecretStr("")
+    photo_storage_dir: Path = ROOT_ENV.parent / ".private" / "photos"
+    photo_stub_mode: Literal["solved", "low_confidence", "out_of_scope"] = "solved"
     app_env: str = "development"
     app_origin: str = "http://localhost:8081"
     api_public_origin: str = "http://localhost:8000"

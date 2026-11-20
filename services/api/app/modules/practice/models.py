@@ -7,7 +7,9 @@ from sqlalchemy import (
     Integer,
     Table,
     Text,
+    UniqueConstraint,
     Uuid,
+    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -69,8 +71,15 @@ mastery = Table(
 reports = Table(
     "content_reports",
     Base.metadata,
-    Column("user_id", Uuid, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("question_id", Text, ForeignKey("questions.id"), primary_key=True, index=True),
+    Column("id", Uuid, primary_key=True, server_default=func.gen_random_uuid()),
+    Column("user_id", Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("question_id", Text, ForeignKey("questions.id"), index=True),
+    Column("photo_solution_id", Uuid, ForeignKey("photo_solutions.id", ondelete="CASCADE")),
     Column("text", Text, nullable=False),
     Column("created_at", DateTime(timezone=True), nullable=False),
+    UniqueConstraint("user_id", "question_id", name="uq_report_question"),
+    UniqueConstraint("user_id", "photo_solution_id", name="uq_report_photo"),
+    CheckConstraint(
+        "num_nonnulls(question_id,photo_solution_id)=1", name="ck_report_target"
+    ),
 )

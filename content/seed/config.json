@@ -13,6 +13,9 @@
         "mock_exams": 1
       }
     },
+    { "key": "photo_limits", "value": { "free_total": 3, "pass_daily": 10 } },
+    { "key": "photo_min_confidence", "value": 0.75 },
+    { "key": "photo_retention_days", "value": 30 },
     { "key": "web_price_groups_try", "value": [790, 990, 1290] },
     { "key": "native_prices_try", "value": { "ios": 990, "android": 990 } },
     { "key": "mock_day", "value": "sunday" },

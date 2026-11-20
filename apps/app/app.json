@@ -10,7 +10,15 @@
       "expo-status-bar",
       "expo-font",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Sorunun fotoğrafını çekmek için kamera erişimine izin ver.",
+          "photosPermission": "Çözülecek sorunun fotoğrafını seçmek için fotoğraflarına erişime izin ver.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

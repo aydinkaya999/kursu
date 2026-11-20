@@ -11,6 +11,7 @@ from app.modules.practice import catalogue, moderation, service
 from app.modules.practice.schemas import (
     Advance,
     CompleteLesson,
+    PhotoReportInput,
     Practice,
     PracticeStart,
     ReportInput,
@@ -96,7 +97,7 @@ async def complete_lesson(
 
 @router.post("/content-reports", operation_id="reportContent")
 async def report(
-    data: ReportInput, db: Session, user: CurrentUser, now: ServerTime
+    data: ReportInput | PhotoReportInput, db: Session, user: CurrentUser, now: ServerTime
 ) -> ReportReceipt:
     result = await moderation.report(db, user, data, now)
     await db.commit()

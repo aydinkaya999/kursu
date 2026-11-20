@@ -3,6 +3,38 @@ export const tr = {
     subject: "Kürsü giriş kodun",
     body: "Kürsü giriş kodun: {code}\nKod 10 dakika geçerlidir.",
   },
+  photo: {
+    title: "Fotoğraftan çözüm",
+    tile: "Fotoğraftan soru çöz",
+    rights: (n: number) => "Bugün " + n + " hak",
+    captured: "Çekilen fotoğraf",
+    question: "Okunan soru",
+    caution: "Yapay zekâ çözümü, hata içerebilir.",
+    answer: "Yanıt",
+    related: (lesson: string) => "İlgili mikro ders: " + lesson,
+    again: "Yeni fotoğraf çek",
+    report: "Bu çözümde hata var",
+    // Draft copy for capture, refusal, permission and allowance states.
+    take: "Fotoğraf çek",
+    upload: "Fotoğraf yükle",
+    cameraPreview: "Kamera önizlemesi",
+    cameraPermission:
+      "Sorunun fotoğrafını çekmek için kamera erişimine izin ver.",
+    photoPermission:
+      "Çözülecek sorunun fotoğrafını seçmek için fotoğraflarına erişime izin ver.",
+    low: "Bu soruyu güvenle çözemedik.",
+    outside: "Bu soru AGS kapsamı dışında.",
+    topic: (name: string) => "İlgili konu: " + name,
+    demo: "Örnek çözüm",
+    freeEnd: "Ücretsiz fotoğraf haklarını kullandın.",
+    dailyEnd:
+      "Bugünkü fotoğraf haklarını kullandın. Yarın yeniden deneyebilirsin.",
+    invalid:
+      "Fotoğrafı okuyamadık. JPEG, PNG veya WebP biçiminde daha küçük bir fotoğraf seç.",
+    unavailable: "Fotoğraftan çözüm şu anda kullanılamıyor.",
+    gone: "Bu fotoğraf çözümüne ulaşılamıyor.",
+    processing: "Fotoğrafın işleniyor.",
+  },
   study: {
     micro: "Mikro ders",
     previous: "Önceki",
@@ -90,6 +122,7 @@ export const tr = {
     features: "Özellik",
     free: "Ücretsiz",
     first: (n: number) => "İlk " + n + " gün",
+    total: (n: number) => "Toplam " + n,
     perDay: (n: number) => "Günde " + n,
     untilExam: "Sınava kadar",
     unlimited: "Sınırsız",

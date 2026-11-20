@@ -80,7 +80,7 @@ Primary keys are UUIDs unless noted. Content rows use stable string ids (slugs) 
 | Progress | `GET /v1/progress` |
 | Commerce | `GET /v1/paywall` · `GET /v1/entitlements` · `POST /v1/purchases/web/checkout` · `POST /v1/purchases/native/verify` · `POST /v1/webhooks/{provider}` |
 | Operations | `POST /v1/content-reports` · `POST /v1/events` |
-| Photo (P1) | `POST /v1/photo-solutions` · `GET /v1/photo-solutions/{id}` |
+| Photo (P1) | `POST /v1/photo-solutions` · `GET /v1/photo-solutions/quota` · `GET /v1/photo-solutions/{id}` |
 
 Question payloads sent before an answer contain the stem and options only. The correct option, rationales, steps and source are returned by the answer endpoint, and by the mock review endpoint after submission (WHY-6, MOCK-7).
 
@@ -119,7 +119,7 @@ First-party only. The client posts batches to `POST /v1/events`; the server also
 
 ## 10. Photo solve (P1)
 
-`POST /v1/photo-solutions` accepts an image. A `VisionSolver` interface returns extracted text, steps, answer, confidence and the related topic. The stub returns a canned result. The service enforces PHOTO-3 to PHOTO-6: confidence threshold, scope check, limits, no reuse, deletion after 30 days. The request to the provider contains no user identifiers.
+`POST /v1/photo-solutions` accepts an image. A `VisionSolver` interface returns extracted text, steps, answer, confidence and the related topic. The stub returns a canned result. The service enforces PHOTO-3 to PHOTO-6: confidence threshold, scope check, limits, no reuse, deletion after 30 days. The provider receives only normalized JPEG bytes. The API stores images in a private filesystem volume shared with the scheduled deletion command. PostgreSQL stores the owner, request ID, assessed result and expiry. Photo reports use the same content-report endpoint as question reports.
 
 ## 11. Configuration
 

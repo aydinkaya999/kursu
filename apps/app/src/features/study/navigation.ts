@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isLimit, limitRoute } from "../commerce/navigation";
 import { startPractice, type TopicStart } from "./api";
 
-export type Origin = "lessons" | "today" | "notebook";
+export type Origin = "lessons" | "today" | "notebook" | "photo";
 export function origin(value?: string): Origin {
-  return value === "today" || value === "notebook" ? value : "lessons";
+  return value === "today" || value === "notebook" || value === "photo"
+    ? value
+    : "lessons";
 }
 export function leave(from: Origin) {
   router.dismissTo(`/${from}`);

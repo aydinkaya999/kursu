@@ -82,11 +82,19 @@ async def use(
         return
     if len(existing) >= getattr(cfg.free_limits, counter):
         raise ApiError(403, "free_limit_reached", "Free allowance reached", counter=counter)
-    items = [*existing, item]
+    await record_use(db, user, counter, period, item)
+
+
+async def record_use(
+    db: AsyncSession, user: UUID, counter: str, period: str, item: str
+) -> None:
+    # The caller locks the user and checks the applicable allowance first.
+    keys = dict(user_id=user, counter=counter, period=period)
     await db.execute(
         insert(counters)
-        .values(**keys, items=items)
+        .values(**keys, items=[item])
         .on_conflict_do_update(
-            index_elements=["user_id", "counter", "period"], set_={"items": items}
+            index_elements=["user_id", "counter", "period"],
+            set_={"items": func.array_append(counters.c["items"], item)},
         )
     )

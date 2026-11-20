@@ -38,6 +38,11 @@ export function PaywallView({
     [t.questions, t.perDay(l.questions_per_day), t.unlimited],
     [tr.study.micro, t.perDay(l.lessons_per_day), t.unlimited],
     [t.mock, formatNumber(l.mock_exams), t.all],
+    [
+      tr.photo.title,
+      t.total(offer.photo_limits.free_total),
+      t.perDay(offer.photo_limits.pass_daily),
+    ],
   ];
   return (
     <Screen
@@ -111,6 +116,7 @@ export default function Paywall() {
       await Promise.all(
         [
           "paywall",
+          "photo-quota",
           "entitlement",
           "progress",
           "today",

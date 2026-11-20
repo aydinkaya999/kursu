@@ -72,10 +72,17 @@ class Practice(BaseModel):
     feedback: Feedback | None = None
 
 
-class ReportInput(BaseModel):
+class ReportText(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
-    question_id: str
     text: str = Field(min_length=1, max_length=1000)
+
+
+class ReportInput(ReportText):
+    question_id: str
+
+
+class PhotoReportInput(ReportText):
+    photo_solution_id: UUID
 
 
 class ReportReceipt(BaseModel):

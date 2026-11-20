@@ -21,7 +21,13 @@ class AccessConfig(BaseModel):
     free_limits: Limits
 
 
+class PhotoLimits(BaseModel):
+    free_total: Allowance
+    pass_daily: Allowance
+
+
 class Config(AccessConfig):
+    photo_limits: PhotoLimits
     results_date: date
     web_price_groups_try: list[Price] = Field(min_length=3, max_length=3)
     native_prices_try: dict[Native, Price]
@@ -34,6 +40,7 @@ class Entitlement(BaseModel):
 
 
 class Paywall(BaseModel):
+    photo_limits: PhotoLimits
     results_date: date
     limits: Limits
     amount_try: int

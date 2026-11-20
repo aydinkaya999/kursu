@@ -18,6 +18,7 @@ const offer: Offer = {
   amount_try: 745,
   results_date: "2028-06-11",
   access: { active: false, source: null, valid_until: null },
+  photo_limits: { free_total: 4, pass_daily: 9 },
   limits: {
     lessons_per_day: 2,
     questions_per_day: 7,
@@ -40,6 +41,8 @@ test("offer shows remote values and sends a guest through sign-in before checkou
   await screen.findByText("₺745");
   expect(screen.getByText(tr.commerce.perDay(7))).toBeVisible();
   expect(screen.getByText(tr.commerce.first(4))).toBeVisible();
+  expect(screen.getByText(tr.commerce.total(4))).toBeVisible();
+  expect(screen.getByText(tr.commerce.perDay(9))).toBeVisible();
   expect(formatUntilDate(offer.results_date)).toBe("11 Haziran 2028'e");
   expect(formatUntilDate("2027-06-11")).toBe("11 Haziran 2027'ye");
   await fireEvent.press(screen.getByRole("button", { name: tr.commerce.buy }));

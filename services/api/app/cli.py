@@ -21,6 +21,8 @@ from app.modules.content.bundle import (
 from app.modules.content.importer import import_bundle
 from app.modules.content.placeholders import make_placeholders
 from app.modules.mocks.service import submit_expired
+from app.modules.photos.service import purge
+from app.modules.photos.storage import PhotoStore
 
 
 async def import_documents(settings: Settings, documents: Iterable[object]) -> None:
@@ -42,7 +44,19 @@ async def expire(settings: Settings) -> int:
         await database.engine.dispose()
 
 
+async def delete_expired_photos(settings: Settings) -> int:
+    database = Database(settings.database_url)
+    try:
+        async with database.sessions() as db:
+            return await purge(db, PhotoStore(settings.photo_storage_dir), server_now())
+    finally:
+        await database.engine.dispose()
+
+
 def run(args: argparse.Namespace, settings: Settings) -> None:
+    if args.command == "delete-expired-photos":
+        print(f"Removed {asyncio.run(delete_expired_photos(settings))} private images.")
+        return
     if args.command == "submit-expired-mocks":
         print(f"Submitted {asyncio.run(expire(settings))} expired attempts.")
         return
@@ -69,6 +83,7 @@ def run(args: argparse.Namespace, settings: Settings) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("delete-expired-photos", help="remove expired photos and files")
     commands.add_parser("submit-expired-mocks", help="submit due timed mocks")
     importer = commands.add_parser(
         "import-content", help="validate and upsert offline JSON"
@@ -85,7 +100,7 @@ def main() -> None:
         parser.exit(1, f"{error}\n")
     except DBAPIError as error:
         parser.exit(1, f"Database rejected the import: {error.orig}\n")
-    if args.command != "submit-expired-mocks":
+    if args.command in {"import-content", "make-placeholders"}:
         print("Content ready.")
 
 

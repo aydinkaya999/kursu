@@ -33,7 +33,12 @@ export function leaveWall({ from, attemptId, source }: Destination) {
       pathname: "/mock/[attemptId]/result",
       params: { attemptId },
     });
-  else if (from === "mock" || from === "notebook" || from === "lessons")
+  else if (
+    from === "mock" ||
+    from === "notebook" ||
+    from === "lessons" ||
+    from === "photo"
+  )
     router.dismissTo(`/${from}`);
   else if (source === "limit")
     router.dismissTo({ pathname: "/today", params: { preview: "closed" } });

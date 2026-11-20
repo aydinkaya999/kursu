@@ -7,6 +7,7 @@ import secrets
 import signal
 from datetime import date, timedelta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import FrameType
 from uuid import uuid4
 
@@ -42,6 +43,7 @@ def main() -> None:
     args = parser.parse_args()
     url = make_url(Settings().database_url)
     engine = create_engine(url)
+    photo_dir = TemporaryDirectory(prefix="kursu-e2e-photos-")
     schema = "test_ui_" + uuid4().hex
     signal.signal(signal.SIGTERM, stop)
     with engine.begin() as conn:
@@ -51,6 +53,7 @@ def main() -> None:
         os.environ.update(
             DATABASE_URL=isolated.render_as_string(hide_password=False),
             APP_ENV="test",
+            PHOTO_STORAGE_DIR=photo_dir.name,
             JWT_SECRET=secrets.token_urlsafe(48),
         )
         command.upgrade(
@@ -147,6 +150,7 @@ def main() -> None:
     finally:
         with engine.begin() as conn:
             conn.execute(DropSchema(schema, cascade=True))
+        photo_dir.cleanup()
         engine.dispose()
 
 

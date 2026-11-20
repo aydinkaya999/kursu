@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Annotated, Literal
 from urllib.parse import parse_qs, urlencode
@@ -29,6 +30,8 @@ from app.modules.accounts.schemas import (
     Tokens,
 )
 from app.modules.accounts.security import COOKIE, CurrentUser, issue, signing_key
+from app.modules.photos.models import solutions
+from app.modules.photos.router import Store
 from app.modules.plan.service import recompute_existing
 
 router = APIRouter(
@@ -119,15 +122,22 @@ async def logout(
 
 @router.delete("/me", operation_id="deleteAccount")
 async def delete_account(
-    user: CurrentUser, db: Session, response: Response
+    user: CurrentUser, db: Session, response: Response, store: Store
 ) -> dict[str, bool]:
     guest = await db.scalar(
         select(users.c.is_guest).where(users.c.id == user).with_for_update()
     )
     if guest is not False:
         raise ApiError(409, "conflict", "A registered account is required")
+    photos = (await db.scalars(select(solutions.c.id).filter_by(user_id=user))).all()
     await erase(db, user)
     await db.commit()
+    for photo in photos:
+        # The scheduled sweep retries any file left after a committed account deletion.
+        try:
+            await asyncio.to_thread(store.remove, photo)
+        except OSError:
+            continue
     clear_cookie(response)
     return {"ok": True}
 

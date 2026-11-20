@@ -80,7 +80,7 @@ After answering, the chosen option's rationale appears first. Other rationales, 
 | `pnpm typecheck` | Check both TypeScript projects and run strict mypy on the service. |
 | `pnpm test` | Run Jest component tests and pytest API tests. Leave PostgreSQL running. |
 | `pnpm check` | Run lint, type checks and unit/API tests together. |
-| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports, mocks, progress, checkout and navigation at 390 and 1280 px. |
+| `pnpm test:e2e` | Run Chromium against the web export on port 4173, an API with a temporary seeded PostgreSQL schema on 8100 and the development gallery on 4181. Covers placement, accounts, planning, lesson checks, topic tests, answer feedback, reports, mocks, progress, checkout, photo capture/upload and navigation at 390 and 1280 px. |
 
 Run `docker compose stop` to stop PostgreSQL and keep its data. To start it again, run `docker compose up -d --wait postgres`.
 
@@ -116,6 +116,14 @@ The paywall reads the dates, limits and platform price from the API. Web prices 
 
 In development or test, sign in and press **Sezon paketini al** to exercise the web checkout or signed iOS/Android test receipt. Checkout grants the same account access through the end of results day across all platforms. The synchronous test providers do not collect money. Production requires a real web checkout and signed store verification adapter before enabling sales. [Season configuration](content/seed/config.json)
 
+## Photo solve
+
+Open **Fotoğraftan soru çöz** on Today or visit `/photo`. Take a picture with the camera or choose an existing image. The browser camera requires HTTPS or localhost. The API returns a private result with the extracted question, steps, answer and a related published lesson. Its development/test vision adapter returns a marked example. Set `PHOTO_STUB_MODE=low_confidence` or `out_of_scope` and restart the API to exercise each refusal. A production vision adapter is still required to interpret actual questions.
+
+The authenticated API serves `POST /v1/photo-solutions` (base64 image and a request UUID), `GET /v1/photo-solutions/quota` and `GET /v1/photo-solutions/{id}`. It enforces three free submissions in total or ten per Istanbul day with the season pass. A processed refusal consumes one submission. The same request UUID reopens the retained result. Upgrading an existing season supplies missing photo keys and preserves its configured limits and prices. Configure `photo_limits`, `photo_min_confidence` and `photo_retention_days` through the content importer. Submit owner feedback to `POST /v1/content-reports` with `photo_solution_id` and `text`.
+
+The server validates still JPEG, PNG and WebP images, strips metadata and stores JPEG files under `PHOTO_STORAGE_DIR` (default `.private/photos` at the repository root). Mount the same private persistent volume on the API and its external scheduler. Schedule `pnpm jobs:delete-photos` every minute from the repository root. Reads stop at the configured deadline, 30 days by default. The job removes expired records, reports, files and interrupted uploads. Account deletion also removes the user's photos. After editing the native camera permission copy in `tr.ts`, run `pnpm gen:camera-copy` to update the Expo manifest.
+
 ## Repository
 
 - `apps/app/app/` contains the Router layouts and routes. Shared UI is in `apps/app/src/components/`, tokens and bundled fonts are in `src/theme/`, Turkish copy is in `src/i18n/tr.ts` and locale formatting is in `src/lib/format.ts`. TanStack Query handles server state and the placement screens are in `src/features/placement/`.
@@ -124,4 +132,4 @@ In development or test, sign in and press **Sezon paketini al** to exercise the 
 - `packages/api-client/src/index.ts` is generated from `app.openapi()`. feTS derives the typed operations and response bodies from that document. Change the API, run `pnpm gen:api` and include the generated file in the same commit.
 - `.github/workflows/ci.yml` checks migration and client drift, runs the root checks and browser smoke test, exports both native bundles and starts the two development servers on pushes and pull requests.
 
-Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md) · [M8 mock exams](.agent/plans/M8-mock-exams.md) · [M9 season pass](.agent/plans/M9-season-pass.md)
+Install Expo-aware packages from `apps/app` with `npx expo install <package> --pnpm`. See the milestone plans for decisions and verification. [M0 scaffold](.agent/plans/M0-scaffold.md) · [M1 design system](.agent/plans/M1-design-system.md) · [M2 content catalogue](.agent/plans/M2-content-catalogue.md) · [M3 guest placement](.agent/plans/M3-guest-placement.md) · [M4 accounts and settings](.agent/plans/M4-accounts-settings.md) · [M5 daily plan](.agent/plans/M5-daily-plan.md) · [M6 lessons and practice](.agent/plans/M6-lessons-practice.md) · [M7 mistake notebook](.agent/plans/M7-mistake-notebook.md) · [M8 mock exams](.agent/plans/M8-mock-exams.md) · [M9 season pass](.agent/plans/M9-season-pass.md) · [M10 photo solve](.agent/plans/M10-photo-solve.md)

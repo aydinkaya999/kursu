@@ -1067,6 +1067,9 @@ export type ApiDocument = {
           "limits": {
             "$ref": "#/components/schemas/Limits"
           },
+          "photo_limits": {
+            "$ref": "#/components/schemas/PhotoLimits"
+          },
           "platform": {
             "$ref": "#/components/schemas/Platform"
           },
@@ -1088,6 +1091,7 @@ export type ApiDocument = {
           }
         },
         "required": [
+          "photo_limits",
           "results_date",
           "limits",
           "amount_try",
@@ -1097,6 +1101,184 @@ export type ApiDocument = {
           "sandbox_receipt"
         ],
         "title": "Paywall",
+        "type": "object"
+      },
+      "PhotoLimits": {
+        "properties": {
+          "free_total": {
+            "$ref": "#/components/schemas/Allowance"
+          },
+          "pass_daily": {
+            "$ref": "#/components/schemas/Allowance"
+          }
+        },
+        "required": [
+          "free_total",
+          "pass_daily"
+        ],
+        "title": "PhotoLimits",
+        "type": "object"
+      },
+      "PhotoQuota": {
+        "properties": {
+          "period": {
+            "enum": [
+              "lifetime",
+              "day"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "remaining": {
+            "title": "Remaining",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "remaining",
+          "period"
+        ],
+        "title": "PhotoQuota",
+        "type": "object"
+      },
+      "PhotoReportInput": {
+        "additionalProperties": false,
+        "properties": {
+          "photo_solution_id": {
+            "format": "uuid",
+            "title": "Photo Solution Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "photo_solution_id"
+        ],
+        "title": "PhotoReportInput",
+        "type": "object"
+      },
+      "PhotoResult": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "is_placeholder": {
+            "title": "Is Placeholder",
+            "type": "boolean"
+          },
+          "lesson": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RelatedLesson"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "state": {
+            "enum": [
+              "solved",
+              "low_confidence",
+              "out_of_scope"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "state",
+          "is_placeholder"
+        ],
+        "title": "PhotoResult",
+        "type": "object"
+      },
+      "PhotoSolution": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "preview_jpeg": {
+            "title": "Preview Jpeg",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/PhotoResult"
+          }
+        },
+        "required": [
+          "id",
+          "result",
+          "preview_jpeg"
+        ],
+        "title": "PhotoSolution",
+        "type": "object"
+      },
+      "PhotoUpload": {
+        "additionalProperties": false,
+        "properties": {
+          "image": {
+            "maxLength": 13981016,
+            "minLength": 4,
+            "title": "Image",
+            "type": "string"
+          },
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "image"
+        ],
+        "title": "PhotoUpload",
         "type": "object"
       },
       "Placement": {
@@ -1885,6 +2067,24 @@ export type ApiDocument = {
         "title": "RefreshRequest",
         "type": "object"
       },
+      "RelatedLesson": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "RelatedLesson",
+        "type": "object"
+      },
       "ReportInput": {
         "additionalProperties": false,
         "properties": {
@@ -1900,8 +2100,8 @@ export type ApiDocument = {
           }
         },
         "required": [
-          "question_id",
-          "text"
+          "text",
+          "question_id"
         ],
         "title": "ReportInput",
         "type": "object"
@@ -2313,6 +2513,24 @@ export type ApiDocument = {
           "text"
         ],
         "title": "SolutionStep",
+        "type": "object"
+      },
+      "Step": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "text"
+        ],
+        "title": "Step",
         "type": "object"
       },
       "StudyLesson": {
@@ -3754,7 +3972,15 @@ export type ApiDocument = {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReportInput"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReportInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PhotoReportInput"
+                  }
+                ],
+                "title": "Data"
               }
             }
           },
@@ -5533,6 +5759,286 @@ export type ApiDocument = {
         "summary": "Paywall",
         "tags": [
           "Commerce"
+        ]
+      }
+    },
+    "/v1/photo-solutions": {
+      "post": {
+        "operationId": "solvePhoto",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoSolution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Upload",
+        "tags": [
+          "Photo solve"
+        ]
+      }
+    },
+    "/v1/photo-solutions/quota": {
+      "get": {
+        "operationId": "getPhotoQuota",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoQuota"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Quota",
+        "tags": [
+          "Photo solve"
+        ]
+      }
+    },
+    "/v1/photo-solutions/{id}": {
+      "get": {
+        "operationId": "getPhotoSolution",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhotoSolution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Solution",
+        "tags": [
+          "Photo solve"
         ]
       }
     },

@@ -33,6 +33,8 @@ export const radius = {
 export const line = { hair: 1, control: 1.5, selected: 2 } as const;
 export const size = {
   target: 44,
+  photoPreview: 76,
+  stepBadge: 28,
   checkbox: 20,
   resultRow: 30,
   action: 52,

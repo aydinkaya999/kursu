@@ -14,6 +14,7 @@ from app.modules.commerce.router import router as commerce_router
 from app.modules.content.router import router as catalogue_router
 from app.modules.mocks.router import router as mock_router
 from app.modules.notebook.router import router as notebook_router
+from app.modules.photos.router import router as photo_router
 from app.modules.placement.router import router as placement_router
 from app.modules.plan.router import router as plan_router
 from app.modules.practice.router import router as practice_router
@@ -75,6 +76,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         commerce_router,
         mock_router,
         notebook_router,
+        photo_router,
         placement_router,
         plan_router,
         practice_router,

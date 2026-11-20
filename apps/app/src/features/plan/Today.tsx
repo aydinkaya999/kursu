@@ -33,6 +33,8 @@ import HealthPanel from "../health/HealthPanel";
 import { TodayPlacement } from "../placement/TodayPlacement";
 import { useConfig, useMe } from "../placement/queries";
 import { Status } from "../placement/Status";
+import { PhotoTile } from "../photo/PhotoTile";
+import { usePhotoQuota } from "../photo/queries";
 import { getToday, taskAction, type Day, type Task } from "./api";
 import { describe } from "./tasks";
 const t = tr.today;
@@ -42,11 +44,13 @@ export function DayView({
   wide,
   onTask,
   controls,
+  photoRemaining,
 }: {
   day: Day;
   wide: boolean;
   onTask: (task: Task) => void;
   controls?: ReactNode;
+  photoRemaining?: number;
 }) {
   const pill = <Pill label={tr.onboarding.countdown(day.days_to_exam)} />;
   const date = (
@@ -80,6 +84,7 @@ export function DayView({
               {title}
             </View>
             {pill}
+            <PhotoTile remaining={photoRemaining} />
           </>
         ) : (
           <>
@@ -128,20 +133,27 @@ export function DayView({
               {day.earlier_completed.map(row)}
             </>
           )}
-          <View
-            style={s.streak}
-            role="group"
-            accessibilityLabel={t.streakLabel}
-          >
-            <View style={s.inline}>
-              <Icon name="flame" color={colors.butterInk} />
-              <Label weight={700} color={colors.butterInk}>
-                {t.streak(day.streak)}
+          <View style={s.tiles}>
+            {!wide && (
+              <View style={s.tile}>
+                <PhotoTile remaining={photoRemaining} />
+              </View>
+            )}
+            <View
+              style={[s.streak, s.tile]}
+              role="group"
+              accessibilityLabel={t.streakLabel}
+            >
+              <View style={s.inline}>
+                <Icon name="flame" color={colors.butterInk} />
+                <Label weight={700} color={colors.butterInk}>
+                  {t.streak(day.streak)}
+                </Label>
+              </View>
+              <Label variant="caption" color={colors.butterInk}>
+                {t.weekly(day.weekly_goal, inflectedNumber(day.weekly_done))}
               </Label>
             </View>
-            <Label variant="caption" color={colors.butterInk}>
-              {t.weekly(day.weekly_goal, inflectedNumber(day.weekly_done))}
-            </Label>
           </View>
           {!wide && controls}
         </View>
@@ -209,6 +221,7 @@ export default function Today() {
     config = useConfig(),
     cache = useQueryClient(),
     enabled = !!me.data?.profile;
+  const quota = usePhotoQuota(me.data?.id, config.dataUpdatedAt);
   const day = useQuery({
     queryKey: ["today", me.data?.id],
     queryFn: getToday,
@@ -265,6 +278,7 @@ export default function Today() {
             />
           }
           day={day.data}
+          photoRemaining={quota.data?.remaining}
           wide={wide}
           onTask={(task) => {
             if (!start.isPending) start.mutate(task);
@@ -284,6 +298,9 @@ export default function Today() {
             if (start.variables) start.mutate(start.variables);
           }}
         />
+      )}
+      {(!day.data || !enabled || isLimit(day.error)) && (
+        <PhotoTile remaining={quota.data?.remaining} />
       )}
       {(!day.data || !enabled) && <TodayPlacement />}
       {!wide && (
@@ -352,6 +369,8 @@ const s = StyleSheet.create({
     paddingHorizontal: space.x24,
     gap: space.x14,
   },
+  tiles: { flexDirection: "row", gap: space.x10 },
+  tile: { flex: 1, minWidth: 0 },
   streak: {
     padding: space.x12,
     borderRadius: radius.task,
